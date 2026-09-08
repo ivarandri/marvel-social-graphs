@@ -1,0 +1,125 @@
+{
+  "n": 303,
+  "m_directed": 1784,
+  "m_undirected": 1434,
+  "reciprocal_pairs": 350,
+  "avg_degree": 9.47,
+  "density": 0.0313,
+  "n_isolates": 17,
+  "giant": 277,
+  "island": 9,
+  "top_in": [
+    [
+      "Spider-Man",
+      106
+    ],
+    [
+      "Hulk",
+      64
+    ],
+    [
+      "Wolverine (character)",
+      60
+    ],
+    [
+      "Doctor Strange",
+      50
+    ],
+    [
+      "Deadpool",
+      33
+    ],
+    [
+      "She-Hulk",
+      29
+    ],
+    [
+      "Scarlet Witch",
+      28
+    ],
+    [
+      "Black Panther (character)",
+      27
+    ],
+    [
+      "Cyclops (Marvel Comics)",
+      26
+    ],
+    [
+      "Luke Cage",
+      25
+    ]
+  ],
+  "top_out": [
+    [
+      "Betsy Braddock",
+      28
+    ],
+    [
+      "Cloak and Dagger (characters)",
+      24
+    ],
+    [
+      "Adam Warlock",
+      22
+    ],
+    [
+      "Venom (character)",
+      21
+    ],
+    [
+      "She-Hulk",
+      20
+    ],
+    [
+      "U.S. Agent",
+      20
+    ],
+    [
+      "Deadpool",
+      19
+    ],
+    [
+      "Rachel Summers",
+      19
+    ],
+    [
+      "Noh-Varr",
+      18
+    ],
+    [
+      "Doctor Strange",
+      17
+    ]
+  ],
+  "island_members": [
+    "Backhand (character)",
+    "Blackthorn (character)",
+    "Radian (Morituri)",
+    "Scaredycat",
+    "Scatterbrain (Morituri)",
+    "Shear (character)",
+    "Snapdragon (Morituri)",
+    "Toxyn",
+    "Vyking"
+  ],
+  "isolate_members": [
+    "Baymax",
+    "Bird-Brain (Marvel Comics)",
+    "Black Fox (Robert Paine)",
+    "Brain Drain (character)",
+    "Breeze Barton",
+    "Captain Midlands",
+    "Charcoal (comics)",
+    "Father Time (Marvel Comics)",
+    "Happy Sam Sawyer",
+    "Hellfire (J. T. Slade)",
+    "Illuminator (Marvel Comics)",
+    "Miracleman (character)",
+    "Ogre (Marvel Comics)",
+    "Sean and Chris",
+    "Solarman",
+    "Super Rabbit",
+    "Yo-Yo Rodriguez"
+  ]
+}

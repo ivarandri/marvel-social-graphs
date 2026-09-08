@@ -1,0 +1,89 @@
+/* marvel-social-graphs — clean/minimal, light + dark aware */
+:root {
+  --bg: #fbfbf9;
+  --fg: #1b1b1b;
+  --muted: #6b6b6b;
+  --rule: #e6e4df;
+  --accent: #c8102e;          /* Marvel-ish red, used sparingly */
+  --card: #ffffff;
+  --maxw: 46rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16171a;
+    --fg: #e9e9e7;
+    --muted: #9a9a98;
+    --rule: #2c2e33;
+    --accent: #ff5a6a;
+    --card: #1d1f23;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 1.25rem; }
+
+/* header / nav */
+header.site {
+  border-bottom: 1px solid var(--rule);
+  padding: 1.4rem 0;
+  margin-bottom: 2.5rem;
+}
+header.site .wrap { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+header.site a.brand {
+  font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em;
+  color: var(--fg); text-decoration: none;
+}
+header.site a.brand span { color: var(--accent); }
+header.site nav a { color: var(--muted); text-decoration: none; margin-left: 1.1rem; font-size: 0.95rem; }
+header.site nav a:hover { color: var(--fg); }
+
+/* type */
+h1, h2, h3 { line-height: 1.25; letter-spacing: -0.02em; }
+h1 { font-size: 2rem; margin: 0 0 0.4rem; }
+h2 { font-size: 1.3rem; margin: 2.6rem 0 0.8rem; }
+h3 { font-size: 1.05rem; margin: 2rem 0 0.5rem; }
+p, ul, ol { margin: 0 0 1.15rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+small, .muted { color: var(--muted); }
+.lede { font-size: 1.15rem; color: var(--muted); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+code { font: 0.88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 4px; padding: 0.1em 0.35em; }
+pre { background: var(--card); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 0.9rem 1rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+pre code { background: none; border: 0; padding: 0; }
+blockquote { margin: 1.5rem 0; padding: 0.2rem 0 0.2rem 1rem; border-left: 3px solid var(--accent); color: var(--muted); }
+
+/* figures */
+figure { margin: 2rem 0; }
+figure img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
+figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 0.55rem; }
+
+/* tables */
+.table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
+th { font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* post list on the landing page */
+ul.posts { list-style: none; padding: 0; }
+ul.posts li { padding: 1.1rem 0; border-bottom: 1px solid var(--rule); }
+ul.posts li.todo { opacity: 0.5; }
+ul.posts .wk { color: var(--accent); font-weight: 700; font-size: 0.82rem; letter-spacing: 0.03em; text-transform: uppercase; }
+ul.posts a { color: var(--fg); font-weight: 600; font-size: 1.1rem; }
+ul.posts p { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.95rem; }
+
+/* meta line on posts */
+.post-meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+footer.site { border-top: 1px solid var(--rule); margin-top: 4rem; padding: 2rem 0 3rem; color: var(--muted); font-size: 0.9rem; }
+footer.site a { color: var(--muted); text-decoration: underline; }

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marvel Social Graphs — 02805</title>
+<meta name="description" content="A group notebook for DTU 02805 Social Graphs and Interactions — mining the Marvel Wikipedia network, one week at a time.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- ===================== EDIT THIS BLOCK ===================== -->
+<!-- Put your real group name and members here. It shows on every page via the header brand + the box below. -->
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html">Marvel <span>Social Graphs</span></a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="posts/week1.html">Week 1</a>
+      <a href="https://sunelehmann.com/socialgraphs2026-web/">Course</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Marvel Social Graphs</h1>
+  <p class="lede">Our group notebook for <strong>02805 Social Graphs and Interactions</strong> at DTU.
+  Every week we pull one story out of the same little universe: the 303 characters in Wikipedia's
+  <em>Category: Marvel Comics superheroes</em> and the links between their pages.</p>
+
+  <p class="muted">
+    <strong>Group:</strong> Group N &nbsp;·&nbsp;
+    <strong>Members:</strong> Ívar &lt;add the rest&gt; &nbsp;·&nbsp;
+    <a href="https://github.com/ivarandri/marvel-social-graphs">source on GitHub</a>
+  </p>
+  <!-- ========================================================= -->
+
+  <h2>Posts</h2>
+  <ul class="posts">
+    <li>
+      <span class="wk">Week 1</span><br>
+      <a href="posts/week1.html">One giant blob, one island, and 17 loners</a>
+      <p>Loading the frozen snapshot, degree distributions, who-links-whom, and the characters no one links to.</p>
+    </li>
+    <li class="todo"><span class="wk">Week 2</span><br><a href="#">coming soon</a><p>Random networks &amp; the configuration model.</p></li>
+    <li class="todo"><span class="wk">Week 3</span><br><a href="#">coming soon</a></li>
+    <li class="todo"><span class="wk">Week 4</span><br><a href="#">coming soon</a></li>
+  </ul>
+
+  <h2>The dataset</h2>
+  <p>The course hands every group an identical frozen snapshot (built 26 Aug 2026 from the live English
+  Wikipedia): a node roster of all 303 characters and a directed edge list — an edge <code>A&nbsp;→&nbsp;B</code>
+  means the running text of A's article links to B's. Redirects are resolved on both ends; navbox links are
+  excluded. The files live in <code>data/</code>; the analysis that builds each post lives in <code>analysis/</code>.</p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    Built with an LLM for DTU 02805 · data © Wikipedia contributors (CC BY-SA) ·
+    <a href="https://sunelehmann.com/socialgraphs2026-web/weeks/week1.html">week 1 brief</a>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 1 — One giant blob, one island, and 17 loners</title>
+<meta name="description" content="Week 1 of DTU 02805: loading the Marvel Wikipedia snapshot, degree distributions, in- vs out-degree, and the characters nobody links to.">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Marvel <span>Social Graphs</span></a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="week1.html">Week 1</a>
+      <a href="https://sunelehmann.com/socialgraphs2026-web/">Course</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>One giant blob, one island, and 17 loners</h1>
+  <p class="post-meta">Week 1 · the bootstrap edition · <span class="muted">Group N</span></p>
+
+  <p class="lede">We loaded the frozen Marvel snapshot, checked it against the numbers on the
+  course page, and then went looking for the edges of the map — the characters who sit
+  just outside the crowd, or entirely alone.</p>
+
+  <h2>What we asked</h2>
+  <ul>
+    <li>Does our copy of the network actually match the course's stated numbers?</li>
+    <li>The degree distributions — do in- and out-degree really look that different?</li>
+    <li><strong>Who gets linked to, who links out, and why aren't they the same characters?</strong></li>
+    <li>Who lives outside the giant component — the island and the isolates — and are they anybody we've heard of?</li>
+  </ul>
+
+  <h2>What we did</h2>
+  <p>The snapshot ships as two tab-separated files with <code>#</code> comment headers: a roster of
+  303 characters and a directed edge list where <code>A&nbsp;→&nbsp;B</code> means A's article text links
+  to B's. The one trap is that 17 characters have no edge in either direction, so building the graph
+  from the edge list alone silently loses them. We add every node first:</p>
+
+<pre><code>import csv, pandas as pd, networkx as nx
+
+nodes = pd.read_csv("week1_nodes.tsv", sep="\t", comment="#", quoting=csv.QUOTE_NONE)
+edges = pd.read_csv("week1_edges.tsv", sep="\t", comment="#", names=["source", "target"])
+
+G = nx.DiGraph()
+G.add_nodes_from(nodes.node_id)        # every node FIRST -> the 17 isolates survive
+G.add_edges_from(edges.itertuples(index=False))</code></pre>
+
+  <p>That reproduces the course page exactly:</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Quantity</th><th class="num">Ours</th><th class="num">Page</th></tr>
+    <tr><td>Nodes</td><td class="num">303</td><td class="num">303</td></tr>
+    <tr><td>Directed edges</td><td class="num">1,784</td><td class="num">1,784</td></tr>
+    <tr><td>Undirected pairs</td><td class="num">1,434</td><td class="num">1,434</td></tr>
+    <tr><td>Reciprocated pairs</td><td class="num">350</td><td class="num">350</td></tr>
+    <tr><td>&#x27E8;k&#x27E9; (undirected)</td><td class="num">9.47</td><td class="num">&#8776;&#8202;9.5</td></tr>
+    <tr><td>Density</td><td class="num">3.1%</td><td class="num">&#8776;&#8202;3%</td></tr>
+    <tr><td>Isolates</td><td class="num">17</td><td class="num">17</td></tr>
+    <tr><td>Giant component</td><td class="num">277</td><td class="num">277</td></tr>
+  </table>
+  </div>
+
+  <p>The two edge counts differ for one reason: 1,784 counts every directed link, and 350 of
+  those links are reciprocated (A&#8202;&#8594;&#8202;B <em>and</em> B&#8202;&#8594;&#8202;A). Collapse each
+  reciprocated pair to a single undirected edge and you remove exactly 350, leaving
+  1,784&#8202;&#8722;&#8202;350&#8202;=&#8202;1,434.</p>
+
+  <h2>The degree distributions</h2>
+
+  <figure>
+    <img src="../assets/fig-degree-dist.png" alt="Four panels: in-degree and out-degree, each on linear and log-log axes, plotted against k+1. In-degree has a long straight-ish tail to k=106; out-degree dies by k~28.">
+    <figcaption>Both degrees, on linear and log–log axes, plotted against <code>k&#8202;+&#8202;1</code> so the
+    17 zero-degree characters survive the log axis. Black line: the course's mixed binning
+    (width-1 bins up to <code>k+1&#8202;=&#8202;7</code>, doubling bins after).</figcaption>
+  </figure>
+
+  <p>On log–log axes the <strong>in-degree</strong> runs down a rough straight line all the way out to
+  Spider-Man at <code>k&#8202;=&#8202;106</code> — the shape people mean when they say "power-law-ish".
+  The <strong>out-degree</strong> tail is a different animal: it bends and stops near
+  <code>k&#8202;&#8776;&#8202;28</code>, nearly four times shorter. On semi-log axes (not shown) out-degree
+  is the one that straightens. Are we sure in-degree is a power law? Not from this — <em>n&#8202;=&#8202;303</em>
+  is small and the fit spans barely 1.5 decades. "Straight-ish on log–log" is a shape reading, not a
+  fitted exponent. The honest tool is the cumulative distribution, which is a week-2 problem.</p>
+
+  <h2>Who is linked to vs who links out</h2>
+
+  <figure>
+    <img src="../assets/fig-in-vs-out.png" alt="Scatter of out-degree vs in-degree on log-log axes. The high-in-degree characters (Spider-Man, Hulk, Wolverine, Doctor Strange) sit top-left; the high-out-degree characters (Betsy Braddock, Cloak and Dagger, Adam Warlock) sit bottom-right. Almost no character is high on both.">
+    <figcaption>Every character, out-degree against in-degree. The two leaderboards barely overlap.</figcaption>
+  </figure>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>#</th><th>Most linked <em>to</em> (in-degree)</th><th class="num">k<sub>in</sub></th><th>Most linking <em>out</em> (out-degree)</th><th class="num">k<sub>out</sub></th></tr>
+    <tr><td class="num">1</td><td>Spider-Man</td><td class="num">106</td><td>Betsy Braddock</td><td class="num">28</td></tr>
+    <tr><td class="num">2</td><td>Hulk</td><td class="num">64</td><td>Cloak and Dagger</td><td class="num">24</td></tr>
+    <tr><td class="num">3</td><td>Wolverine</td><td class="num">60</td><td>Adam Warlock</td><td class="num">22</td></tr>
+    <tr><td class="num">4</td><td>Doctor Strange</td><td class="num">50</td><td>Venom</td><td class="num">21</td></tr>
+    <tr><td class="num">5</td><td>Deadpool</td><td class="num">33</td><td>She-Hulk</td><td class="num">20</td></tr>
+    <tr><td class="num">6</td><td>She-Hulk</td><td class="num">29</td><td>U.S. Agent</td><td class="num">20</td></tr>
+    <tr><td class="num">7</td><td>Scarlet Witch</td><td class="num">28</td><td>Deadpool</td><td class="num">19</td></tr>
+    <tr><td class="num">8</td><td>Black Panther</td><td class="num">27</td><td>Rachel Summers</td><td class="num">19</td></tr>
+  </table>
+  </div>
+
+  <p>Only three names (She-Hulk, Deadpool, Doctor Strange) appear in both top-tens. The reason is in
+  <em>who creates each edge</em>. An <strong>in-link is conferred</strong>: some other article's editors
+  decided this character was worth mentioning — and the more central a character already is, the more
+  editors reach for them, so in-degree keeps compounding (Spider-Man is linked by a third of the whole
+  category). An <strong>out-link is authored</strong>: somebody sat down and wrote it into <em>this</em>
+  page, so out-degree is capped by how thorough one article happens to be. Betsy Braddock tops the
+  out-degree list not because she's the most important mutant but because her page is a
+  continuity-heavy page that name-drops half the X-books. In this network, <strong>in-degree ≈ fame,
+  out-degree ≈ how chatty your own article is.</strong></p>
+
+  <h2>The edges of the map</h2>
+
+  <figure>
+    <img src="../assets/fig-network.png" alt="The full network: a dense central blob (the 277-character giant component) with six hubs labelled, a separate 9-node cluster to the upper left, and a row of 17 unconnected dots along the bottom.">
+    <figcaption>The whole roster. Grey: the 277-character giant component (force-directed).
+    Red, upper-left: a 9-character component with no link to the rest. Gold, along the bottom:
+    the 17 isolates.</figcaption>
+  </figure>
+
+  <p>Outside the giant blob there's exactly one other connected piece: a <strong>9-character island</strong>
+  — Backhand, Blackthorn, Radian, Scaredycat, Scatterbrain, Shear, Snapdragon, Toxyn and Vyking. Several
+  are from the 1980s series <em>Strikeforce: Morituri</em>; the rest are equally deep cuts. Their articles
+  cite <em>each other</em> — a shared pocket of continuity — but not one of them links to, or is linked
+  from, a single character in the main 277. They're a closed loop the A-list never noticed.</p>
+
+  <figure>
+    <img src="../assets/fig-islands.png" alt="Left: the 9-node island drawn as a small graph. Right: a monospaced list of the 17 isolate names including Baymax, Miracleman, Super Rabbit and Yo-Yo Rodriguez.">
+    <figcaption>The island as a little graph, and the full list of the 17 isolates.</figcaption>
+  </figure>
+
+  <h2>What surprised us</h2>
+  <p><strong>Baymax is an isolate.</strong> The inflatable robot from a Disney film that made $650M
+  sits in the roster with degree zero — no Marvel-superhero article's running text links to him, and
+  his own doesn't link back. Fame in the cinema and fame in Wikipedia's link graph are just different
+  quantities. The same list holds <em>Miracleman</em> (a character with one of the most famous rights
+  sagas in comics), <em>Super Rabbit</em>, and <em>Yo-Yo Rodriguez</em>, a hero far better known from TV than from the page graph. The lesson
+  from the course's Part 3 lands hard here: the network only knows what the harvesting rule captured.
+  Links from navigation templates were deliberately excluded, which is defensible — but it's also
+  exactly why Baymax, who probably shares a navbox with half the MCU, comes out with no edges at all.</p>
+
+  <hr>
+  <p class="muted">Reproduce everything: <code>cd analysis &amp;&amp; python3 week1.py</code>.
+  Data is the frozen course snapshot in <code>data/</code>.</p>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    Built with an LLM for DTU 02805 · data © Wikipedia contributors (CC BY-SA) ·
+    <a href="https://sunelehmann.com/socialgraphs2026-web/weeks/week1.html">week 1 brief</a>
+  </div>
+</footer>
+
+</body>
+</html>
