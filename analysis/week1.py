@@ -76,6 +76,51 @@ stats = {
 print(json.dumps(stats, indent=2))
 
 
+# ----------------------------------------------------------------------
+# graph JSON for the interactive network on the web page
+# ----------------------------------------------------------------------
+def _short(s):
+    for suf in (" (character)", " (characters)", " (comics)", " (Marvel Comics)",
+                " (Marvel Comics character)", " (Morituri)"):
+        s = s.replace(suf, "")
+    return s
+
+url = dict(zip(nodes.node_id, nodes.url))
+comp_of = {v: (0 if v in giant else 1 if v in island else 2) for v in G}
+
+# settled starting positions: force layout on the giant component, island + isolates parked
+gpos = nx.spring_layout(G.subgraph(giant), seed=7, k=0.5, iterations=150)
+gx = np.array([p[0] for p in gpos.values()]); gy = np.array([p[1] for p in gpos.values()])
+gpos = {v: (float((x - gx.min()) / gx.ptp()), float((y - gy.min()) / gy.ptp()))
+        for v, (x, y) in gpos.items()}
+ipos = nx.spring_layout(G.subgraph(island), seed=2, k=1.0)
+pos_xy = {}
+for v in G:
+    if comp_of[v] == 0:
+        pos_xy[v] = gpos[v]
+    elif comp_of[v] == 1:
+        x, y = ipos[v]
+        pos_xy[v] = (-0.28 + 0.16 * x, 0.5 + 0.16 * y)
+isos = [v for v in G if comp_of[v] == 2]
+for i, v in enumerate(isos):
+    pos_xy[v] = (1.18, i / (len(isos) - 1))
+
+order = list(G)
+idx = {v: i for i, v in enumerate(order)}
+graph = {
+    "nodes": [{
+        "id": idx[v], "name": name[v], "short": _short(name[v]),
+        "in": in_deg[v], "out": out_deg[v], "comp": comp_of[v],
+        "url": url.get(v, ""),
+        "x": round(pos_xy[v][0], 4), "y": round(pos_xy[v][1], 4),
+    } for v in order],
+    "links": [{"s": idx[u], "t": idx[w]} for u, w in G.edges()],
+    "meta": {"n": n, "m": m_dir, "reciprocal": reciprocal},
+}
+(HERE.parent / "assets" / "marvel.json").write_text(json.dumps(graph, separators=(",", ":")))
+print("wrote assets/marvel.json  —", len(graph["nodes"]), "nodes,", len(graph["links"]), "links")
+
+
 def raw_dist(ks):
     v, c = np.unique(np.asarray(ks), return_counts=True)
     return v, c / len(ks)
