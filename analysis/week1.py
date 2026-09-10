@@ -91,7 +91,7 @@ comp_of = {v: (0 if v in giant else 1 if v in island else 2) for v in G}
 # settled starting positions: force layout on the giant component, island + isolates parked
 gpos = nx.spring_layout(G.subgraph(giant), seed=7, k=0.5, iterations=150)
 gx = np.array([p[0] for p in gpos.values()]); gy = np.array([p[1] for p in gpos.values()])
-gpos = {v: (float((x - gx.min()) / gx.ptp()), float((y - gy.min()) / gy.ptp()))
+gpos = {v: (float((x - gx.min()) / np.ptp(gx)), float((y - gy.min()) / np.ptp(gy)))
         for v, (x, y) in gpos.items()}
 ipos = nx.spring_layout(G.subgraph(island), seed=2, k=1.0)
 pos_xy = {}
@@ -213,7 +213,7 @@ giant_g = G.subgraph(giant)
 pos = nx.spring_layout(giant_g, seed=7, k=0.5, iterations=150)
 xs_ = np.array([p[0] for p in pos.values()])
 ys_ = np.array([p[1] for p in pos.values()])
-pos = {v: ((x - xs_.min()) / (xs_.ptp()), (y - ys_.min()) / (ys_.ptp()) * 0.85 + 0.12)
+pos = {v: ((x - xs_.min()) / np.ptp(xs_), (y - ys_.min()) / np.ptp(ys_) * 0.85 + 0.12)
        for v, (x, y) in pos.items()}                       # giant -> unit box, upper area
 
 isl = nx.spring_layout(G.subgraph(island), seed=2, k=1.0)
