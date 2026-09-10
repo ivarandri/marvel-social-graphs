@@ -23,6 +23,7 @@
   --halftone: radial-gradient(var(--dot, rgba(0,0,0,.06)) 1.1px, transparent 1.2px);
 }
 
+/* explicit toggle wins; the media query below follows the OS when no choice is saved */
 [data-theme="dark"] {
   --ink:    #f4efe3;
   --paper:  #12121a;
@@ -34,6 +35,20 @@
   --shadow: 6px 6px 0 #000;
   --shadow-sm: 3px 3px 0 #000;
   --dot: rgba(255,255,255,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink:    #f4efe3;
+    --paper:  #12121a;
+    --panel:  #1c1c27;
+    --muted:  #a49f93;
+    --rule:   #3a3a49;
+    --red:    #ff4d54;
+    --yellow: #ffd85e;
+    --shadow: 6px 6px 0 #000;
+    --shadow-sm: 3px 3px 0 #000;
+    --dot: rgba(255,255,255,.05);
+  }
 }
 
 * { box-sizing: border-box; }
@@ -279,3 +294,57 @@ footer.site {
   background: var(--ink); color: var(--paper);
 }
 footer.site a { color: var(--yellow); }
+
+/* ============================================================
+   Week 2 — friendship-paradox explorer + summary widgets
+   ============================================================ */
+.fp-wrap {
+  background: var(--panel); border: 3px solid var(--rule); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 1rem 1.1rem 1.3rem; margin: 1.2rem 0;
+}
+.fp-search { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: 1rem; }
+.fp-search input {
+  font: inherit; padding: .45rem .7rem; border: 3px solid var(--rule); border-radius: 8px;
+  background: var(--paper); color: var(--ink); box-shadow: var(--shadow-sm); flex: 1; min-width: 11rem;
+}
+.fp-verdict {
+  font-family: "Anton", sans-serif; text-transform: uppercase; letter-spacing: .02em;
+  font-size: clamp(1.3rem, 4vw, 2rem); line-height: 1; padding: .5rem .7rem;
+  border: 3px solid var(--ink); box-shadow: var(--shadow-sm); display: inline-block; margin-bottom: 1rem;
+}
+.fp-verdict.yes { background: var(--yellow); color: var(--ink); }
+.fp-verdict.no  { background: var(--blue);   color: #fff; }
+.fp-verdict.grey { background: var(--rule); color: var(--paper); }
+.fp-nums { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1rem; }
+.fp-nums div { display: flex; flex-direction: column; }
+.fp-nums b { font-family: "Anton", sans-serif; font-size: 1.7rem; color: var(--red); line-height: 1; }
+.fp-nums span { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: .2rem; }
+.fp-chart {
+  position: relative; display: flex; align-items: flex-end; gap: 2px;
+  height: 150px; padding: 4px; border: 2px solid var(--rule); border-radius: 6px;
+  background: repeating-linear-gradient(0deg, transparent, transparent 24px, var(--rule) 24px, var(--rule) 25px);
+  background-color: var(--paper); overflow: hidden;
+}
+.fp-bar { flex: 1 1 0; min-width: 2px; background: var(--muted); border-radius: 2px 2px 0 0; opacity: .55; }
+.fp-bar.hi { background: var(--red); opacity: 1; }
+.fp-line { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--ink); }
+.fp-line span {
+  position: absolute; right: 4px; top: -1.1rem; font: 700 .72rem "Barlow", sans-serif;
+  background: var(--ink); color: var(--paper); padding: 0 .35rem; border-radius: 3px; white-space: nowrap;
+}
+.fp-top { margin: .8rem 0 0; font-size: .95rem; }
+
+/* null-model mini bars */
+.bars { display: grid; gap: 1rem; margin: 1.5rem 0; }
+.bar-row { display: grid; grid-template-columns: 8.5rem 1fr; gap: .8rem; align-items: center; }
+.bar-row .lab { font-weight: 700; font-size: .9rem; }
+.bar-track { display: flex; flex-direction: column; gap: 4px; }
+.bar-track .seg { display: flex; align-items: center; gap: .5rem; font-size: .82rem; }
+.bar-track .fill { height: 16px; border: 2px solid var(--ink); border-radius: 3px; min-width: 3px; }
+.bar-track .real   .fill { background: var(--red); }
+.bar-track .nulls  .fill { background: var(--blue); }
+.bar-track .rand   .fill { background: var(--muted); }
+.bar-row .tag2 { font-family: "Anton", sans-serif; text-transform: uppercase; font-size: .72rem;
+  padding: .05rem .4rem; border: 2px solid var(--ink); }
+.bar-row .tag2.survive { background: var(--green); color: #fff; }
+.bar-row .tag2.die { background: var(--yellow); color: var(--ink); }

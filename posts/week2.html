@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 2 — Your superhero friends are cooler than you</title>
+<meta name="description" content="Week 2 of DTU 02805: the friendship paradox on the Marvel network, an interactive per-character explorer, and what survives a degree-preserving shuffle.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="bolt">⚡</span>Marvel Social Graphs</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="week1.html">Week&nbsp;1</a>
+      <a href="week2.html" class="active">Week&nbsp;2</a>
+      <a href="https://sunelehmann.com/socialgraphs2026-web/" target="_blank" rel="noopener">Course</a>
+      <button id="themeToggle" type="button">☾</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero reveal">
+    <span class="kicker">Week 2 · models &amp; null models</span>
+    <h1>Your superhero friends<br><span class="mark">are cooler than you.</span></h1>
+    <p class="post-meta">By <span class="tag">Ívar</span> <span class="tag">Gunnlaugur</span> <span class="tag">Víðir</span>
+    &nbsp;·&nbsp; We asked whether the Marvel network is really "special", or just what its degrees force it to be.</p>
+  </section>
+
+  <section class="reveal">
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="87">0</div><div class="label">% out-popularitied by their avg friend</div></div>
+      <div class="stat"><div class="num" data-count="10">0</div><div class="label">links a random character has</div></div>
+      <div class="stat"><div class="num" data-count="22">0</div><div class="label">links their random friend has</div></div>
+      <div class="stat"><div class="num" data-count="1">0</div><div class="label">character nobody out-does (+ 1 on the island)</div></div>
+    </div>
+  </section>
+
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">The friendship paradox</span></h2>
+    <p class="reveal">Pick a random character: on average they're linked to about <strong>10</strong> others.
+    Now follow one of their links to a random <em>friend</em>: that character averages about <strong>22</strong>.
+    Your friends are more connected than you — and it's not a trick. A character with 100 links is
+    <em>somebody's friend</em> 100 times, so they turn up on the "friend" side of the sample 100 times as
+    often as on the "person" side. The size of the gap is exactly the degree variance divided by the mean
+    (σ²&#8202;/&#8202;⟨k⟩) — which is huge for a hub-riddled network like this one.</p>
+    <p class="reveal">It holds for <strong>250 of the 286</strong> non-isolated characters (87%). The 36 it
+    <em>doesn't</em> hold for are almost all hubs — and the hubs are the whole reason everyone else loses
+    the comparison.</p>
+  </section>
+
+  <h2 class="reveal"><span class="mark">Are your friends cooler? Check any character.</span></h2>
+  <p class="reveal narrow">Search a character to see how their links stack up against their friends'.
+  Bars above the line are friends more connected than they are.</p>
+
+  <div class="fp-wrap reveal" data-src="../assets/week2.json">
+    <div class="fp-search">
+      <input type="text" list="fpList" placeholder="Search a character…" aria-label="Search a character">
+      <datalist id="fpList"></datalist>
+      <button class="chip" data-pick="Spider-Man" type="button">Spider-Man</button>
+      <button class="chip" data-pick="random" type="button">a random nobody</button>
+      <button class="chip" data-pick="Radian (Morituri)" type="button">Radian</button>
+    </div>
+    <div class="fp-card" id="fpCard"><p class="muted" style="padding:1rem">Loading…</p></div>
+  </div>
+
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Who drives it</span></h2>
+    <p class="reveal">One character is the single most-connected friend of <strong>everyone they know</strong> —
+    all 106 of them. That's Spider-Man. He is <em>never</em> out-popularitied, and neither is
+    <strong>Radian</strong>, the degree-6 hub of the 9-character island that never connects to the main
+    universe — the island has its own little Spider-Man.</p>
+    <div class="table-wrap reveal">
+    <table>
+      <thead><tr><th>Character</th><th class="num">is the top friend of…</th></tr></thead>
+      <tbody id="topFriends"></tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Compared to what? The shuffle test</span></h2>
+    <p class="reveal">"Marvel clusters 10× more than a random graph" sounds impressive, but a random graph
+    has no hubs <em>and</em> the wrong degrees, so it can't tell you <em>why</em>. The honest baseline keeps
+    every character's number of links fixed and scrambles only <em>who links whom</em> (100 degree-preserving
+    shuffles). Here's what stays surprising and what turns out to be nothing:</p>
+    <div class="bars reveal" id="shuffleBars"></div>
+    <p class="reveal"><strong>Survivors</strong> — clustering (0.32 vs a shuffled 0.16, ~20σ), triangles, and
+    reciprocity (39% of links go both ways vs 5% under the degree-matched null) — are real structure: the
+    Marvel articles are written in <em>groups</em> that cite each other, and when A's page links B, B's page
+    tends to link back. <strong>Casualties</strong> — the 17 isolates and the friendship paradox itself —
+    are byproducts of the degree sequence: the shuffle reproduces them exactly, so there's nothing extra to
+    explain.</p>
+  </section>
+
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Three fake Marvels</span></h2>
+    <p class="reveal">We grew a random graph, a small-world (Watts–Strogatz), and a rich-get-richer
+    (Barabási–Albert) network, each with the giant component's 277 nodes and ~1,420 links.
+    Every model gets about two of the three headline numbers — none gets all three.</p>
+    <div class="table-wrap reveal">
+    <table>
+      <thead><tr><th>network</th><th class="num">clustering C</th><th class="num">avg distance</th><th class="num">biggest hub</th></tr></thead>
+      <tbody id="modelsTable"></tbody>
+    </table>
+    </div>
+    <p class="reveal"><strong>Random</strong> nails the short paths and nothing else. <strong>Watts–Strogatz</strong>
+    matches clustering and distance but its biggest "hub" has 14 links — Spider-Man has 106.
+    <strong>Barabási–Albert</strong> is the only one that grows a real hub (61) and a heavy tail, but its
+    clustering is a third of Marvel's. The missing ingredient in all three: <em>communities</em> — Marvel's
+    triangles come from tight thematic clusters (the X-books, the Avengers, the street-level heroes) that no
+    single-mechanism model produces.</p>
+  </section>
+
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">What surprised us</span></h2>
+    <blockquote class="reveal">
+      <strong>The island has its own Spider-Man.</strong> Nine obscure characters — Radian, Scatterbrain,
+      Toxyn and friends — form a component that never touches the main 277. Inside it, Radian (6 links) is
+      the most connected, and none of his island-mates out-do him. The friendship paradox is scale-invariant:
+      it re-runs in miniature inside a pocket universe nobody's heard of.
+    </blockquote>
+  </section>
+
+  <hr>
+  <p class="reveal muted">Data: the frozen week-1 Marvel snapshot. Reproduce:
+  <code>cd analysis &amp;&amp; python3 week2_post.py</code> builds <code>assets/week2.json</code>;
+  the full working is in our Week 2 notebook.</p>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    Built with an LLM for DTU 02805 · data © Wikipedia contributors (CC BY-SA) ·
+    <a href="https://sunelehmann.com/socialgraphs2026-web/weeks/week2.html" target="_blank" rel="noopener">week 2 brief</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

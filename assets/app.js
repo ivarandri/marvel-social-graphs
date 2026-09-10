@@ -286,3 +286,156 @@
     host.innerHTML = '<p class="muted" style="padding:2rem">Could not load the network data (' + err + ').</p>';
   });
 })();
+
+/* ============================================================
+   Week 2 — friendship-paradox explorer + summary widgets
+   (own IIFE: runs on week2.html, needs no D3)
+   ============================================================ */
+(function () {
+  "use strict";
+  var host = document.querySelector(".fp-wrap");
+  if (!host) return;
+  var src = host.getAttribute("data-src") || "assets/week2.json";
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+
+  fetch(src).then(function (r) { return r.json(); }).then(function (data) {
+    var chars = data.chars;
+    var byKey = {};
+    chars.forEach(function (c) {
+      byKey[c.short.toLowerCase()] = c;
+      byKey[c.name.toLowerCase()] = c;
+    });
+
+    var input = host.querySelector(".fp-search input");
+    var dl = host.querySelector("#fpList");
+    chars.slice().sort(function (a, b) { return a.short.localeCompare(b.short); })
+      .forEach(function (c) {
+        var o = document.createElement("option"); o.value = c.short; dl.appendChild(o);
+      });
+
+    var card = document.getElementById("fpCard");
+
+    function render(c) {
+      if (!c) return;
+      if (!c.deg) {
+        card.innerHTML =
+          '<div class="fp-verdict grey">no friends to compare</div>' +
+          '<p><strong>' + esc(c.short) + '</strong> is one of the 17 isolates — zero links, ' +
+          'so the friendship paradox has nothing to say here.</p>';
+        return;
+      }
+      var scale = Math.max(c.fd[0], c.deg);            // fit both the tallest friend and the line
+      var above = c.fd.filter(function (d) { return d > c.deg; }).length;
+      var bars = c.fd.map(function (d) {
+        var h = Math.max(3, Math.round(d / scale * 100));
+        return '<span class="fp-bar' + (d > c.deg ? " hi" : "") +
+               '" style="height:' + h + '%" title="' + d + ' links"></span>';
+      }).join("");
+      var linePct = Math.max(0, 100 - (c.deg / scale * 100));
+      var lblStyle = linePct < 14 ? ' style="top:3px"' : "";   // keep the label inside the box
+      card.innerHTML =
+        '<div class="fp-verdict ' + (c.holds ? "yes" : "no") + '">' +
+          (c.holds ? "their friends are cooler" : "they’re the cool one") +
+        "</div>" +
+        '<div class="fp-nums">' +
+          "<div><b>" + c.deg + "</b><span>their links</span></div>" +
+          "<div><b>" + c.meanFriend + "</b><span>avg friend’s links</span></div>" +
+          "<div><b>" + above + " / " + c.fd.length + "</b><span>friends more connected</span></div>" +
+        "</div>" +
+        '<div class="fp-chart">' +
+          '<div class="fp-line" style="top:' + linePct.toFixed(1) + '%">' +
+            "<span" + lblStyle + ">" + esc(c.short) + " = " + c.deg + "</span></div>" +
+          bars +
+        "</div>" +
+        '<p class="fp-top">Most connected friend: <strong>' + esc(c.topFriend.short) +
+          "</strong> (" + c.topFriend.deg + " links)</p>";
+    }
+
+    function pickRandomNobody() {
+      var pool = chars.filter(function (c) { return c.deg >= 3 && c.deg <= 12; });
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    input.addEventListener("change", function () {
+      var c = byKey[input.value.trim().toLowerCase()];
+      if (c) render(c);
+    });
+    host.querySelectorAll(".fp-search .chip").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var p = chip.getAttribute("data-pick");
+        var c = p === "random" ? pickRandomNobody() : byKey[p.toLowerCase()];
+        if (c) { input.value = c.short; render(c); }
+      });
+    });
+
+    var q = new URLSearchParams(location.search).get("c");
+    var start = (q && byKey[q.toLowerCase()]) || pickRandomNobody();
+    input.value = start.short;
+    render(start);
+
+    /* ----- "who drives it" table ----- */
+    var tf = document.getElementById("topFriends");
+    if (tf) {
+      tf.innerHTML = data.paradox.topFriends.map(function (f) {
+        return "<tr><td>" + esc(f.short) + '</td><td class="num">' + f.count + " characters</td></tr>";
+      }).join("");
+    }
+
+    /* ----- shuffle-test mini bars ----- */
+    var sb = document.getElementById("shuffleBars");
+    if (sb) {
+      var s = data.shuffle, rec = data.reciprocity;
+      function row(lab, real, realMax, segs, verdict) {
+        var body = segs.map(function (seg) {
+          var w = Math.max(2, Math.round(seg.v / realMax * 100));
+          return '<div class="seg ' + seg.cls + '"><span class="fill" style="width:' + w +
+                 '%"></span><span>' + seg.t + "</span></div>";
+        }).join("");
+        return '<div class="bar-row"><div class="lab">' + lab +
+               ' <span class="tag2 ' + (verdict === "survives" ? "survive" : "die") + '">' + verdict +
+               '</span></div><div class="bar-track">' + body + "</div></div>";
+      }
+      sb.innerHTML =
+        row("clustering C", s.C_real, s.C_real, [
+          { v: s.C_real, t: "real " + s.C_real, cls: "real" },
+          { v: s.C_swap, t: "degree-shuffle " + s.C_swap, cls: "nulls" },
+          { v: s.C_gnm, t: "random graph " + s.C_gnm, cls: "rand" }
+        ], "survives") +
+        row("transitivity", s.T_real, s.T_real, [
+          { v: s.T_real, t: "real " + s.T_real, cls: "real" },
+          { v: s.T_swap, t: "degree-shuffle " + s.T_swap, cls: "nulls" }
+        ], "survives") +
+        row("reciprocity", rec.real, rec.real, [
+          { v: rec.real, t: "real " + Math.round(rec.real * 100) + "%", cls: "real" },
+          { v: rec.null, t: "degree-shuffle " + Math.round(rec.null * 100) + "%", cls: "nulls" }
+        ], "survives") +
+        row("isolated nodes", s.isolates_real, s.isolates_real, [
+          { v: s.isolates_real, t: "real " + s.isolates_real, cls: "real" },
+          { v: s.isolates_real, t: "degree-shuffle " + s.isolates_real + " (identical)", cls: "nulls" },
+          { v: 0.2, t: "random graph ~0", cls: "rand" }
+        ], "dies");
+    }
+
+    /* ----- three fake Marvels table ----- */
+    var mt = document.getElementById("modelsTable");
+    if (mt) {
+      var m = data.models;
+      var order = [
+        ["Marvel (real)", m.real], ["random G(n,m)", m.random],
+        ["Watts–Strogatz", m.ws], ["Barabási–Albert", m.ba]
+      ];
+      mt.innerHTML = order.map(function (r) {
+        return "<tr><td>" + r[0] + '</td><td class="num">' + r[1].C +
+               '</td><td class="num">' + r[1].d + '</td><td class="num">' + r[1].maxk + "</td></tr>";
+      }).join("");
+    }
+  }).catch(function (err) {
+    var card = document.getElementById("fpCard");
+    if (card) card.innerHTML = '<p class="muted">Could not load week2.json (' + err + ").</p>";
+  });
+})();
