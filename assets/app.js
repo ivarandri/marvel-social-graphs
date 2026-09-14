@@ -311,17 +311,19 @@
       byKey[c.name.toLowerCase()] = c;
     });
 
-    var input = host.querySelector(".fp-search input");
-    var dl = host.querySelector("#fpList");
-    chars.slice().sort(function (a, b) { return a.short.localeCompare(b.short); })
-      .forEach(function (c) {
-        var o = document.createElement("option"); o.value = c.short; dl.appendChild(o);
-      });
+    var select = host.querySelector("#fpSelect");
+    var sorted = chars.slice().sort(function (a, b) { return a.short.localeCompare(b.short); });
+    sorted.forEach(function (c) {
+      var o = document.createElement("option");
+      o.value = c.short; o.textContent = c.short + (c.deg ? " (" + c.deg + ")" : " (isolate)");
+      select.appendChild(o);
+    });
 
     var card = document.getElementById("fpCard");
 
     function render(c) {
       if (!c) return;
+      select.value = c.short;
       if (!c.deg) {
         card.innerHTML =
           '<div class="fp-verdict grey">no friends to compare</div>' +
@@ -361,21 +363,20 @@
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
-    input.addEventListener("change", function () {
-      var c = byKey[input.value.trim().toLowerCase()];
+    select.addEventListener("change", function () {
+      var c = byKey[select.value.toLowerCase()];
       if (c) render(c);
     });
     host.querySelectorAll(".fp-search .chip").forEach(function (chip) {
       chip.addEventListener("click", function () {
         var p = chip.getAttribute("data-pick");
         var c = p === "random" ? pickRandomNobody() : byKey[p.toLowerCase()];
-        if (c) { input.value = c.short; render(c); }
+        if (c) render(c);
       });
     });
 
     var q = new URLSearchParams(location.search).get("c");
     var start = (q && byKey[q.toLowerCase()]) || pickRandomNobody();
-    input.value = start.short;
     render(start);
 
     /* ----- "who drives it" table ----- */

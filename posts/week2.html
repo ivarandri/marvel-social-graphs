@@ -58,13 +58,14 @@
   </section>
 
   <h2 class="reveal"><span class="mark">Are your friends cooler? Check any character.</span></h2>
-  <p class="reveal narrow">Search a character to see how their links stack up against their friends'.
+  <p class="reveal narrow">Pick a character to see how their links stack up against their friends'.
   Bars above the line are friends more connected than they are.</p>
 
   <div class="fp-wrap reveal" data-src="../assets/week2.json">
     <div class="fp-search">
-      <input type="text" list="fpList" placeholder="Search a character…" aria-label="Search a character">
-      <datalist id="fpList"></datalist>
+      <select id="fpSelect" aria-label="Choose a character">
+        <option value="">— pick a character —</option>
+      </select>
       <button class="chip" data-pick="Spider-Man" type="button">Spider-Man</button>
       <button class="chip" data-pick="random" type="button">a random nobody</button>
       <button class="chip" data-pick="Radian (Morituri)" type="button">Radian</button>
