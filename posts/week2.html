@@ -93,12 +93,14 @@
     every character's number of links fixed and scrambles only <em>who links whom</em> (100 degree-preserving
     shuffles). Here's what stays surprising and what turns out to be nothing:</p>
     <div class="bars reveal" id="shuffleBars"></div>
-    <p class="reveal"><strong>Survivors</strong> — clustering (0.32 vs a shuffled 0.16, ~20σ), triangles, and
-    reciprocity (39% of links go both ways vs 5% under the degree-matched null) — are real structure: the
-    Marvel articles are written in <em>groups</em> that cite each other, and when A's page links B, B's page
-    tends to link back. <strong>Casualties</strong> — the 17 isolates and the friendship paradox itself —
-    are byproducts of the degree sequence: the shuffle reproduces them exactly, so there's nothing extra to
-    explain.</p>
+    <p class="reveal"><strong>Survivors</strong> — clustering (0.32 vs a shuffled 0.155, z&nbsp;≈&nbsp;20,
+    p&nbsp;&lt;&nbsp;0.01), transitivity (0.182 vs 0.118, z&nbsp;≈&nbsp;15, p&nbsp;&lt;&nbsp;0.01), and
+    reciprocity (39% of links go both ways vs 5% under the degree-matched null, z&nbsp;≈&nbsp;51,
+    p&nbsp;&lt;&nbsp;0.01) — none of the 100 shuffles got anywhere close on any of the three, so this is real
+    structure: the Marvel articles are written in <em>groups</em> that cite each other, and when A's page links
+    B, B's page tends to link back. <strong>Casualties</strong> — the 17 isolates and the friendship paradox
+    itself — are byproducts of the degree sequence: the shuffle reproduces them exactly, so there's nothing
+    extra to explain.</p>
   </section>
 
   <section class="narrow">
@@ -131,9 +133,9 @@
   </section>
 
   <hr>
-  <p class="reveal muted">Data: the frozen week-1 Marvel snapshot. Reproduce:
-  <code>cd analysis &amp;&amp; python3 week2_post.py</code> builds <code>assets/week2.json</code>;
-  the full working is in our Week 2 notebook.</p>
+  <p class="reveal muted">Data: the frozen week-1 Marvel snapshot. Reproduce everything:
+  <code>cd analysis &amp;&amp; python3 week2_post.py</code> — builds <code>assets/week2.json</code>
+  (100 degree-preserving shuffles, 100 configuration-model draws, the three synthetic networks).</p>
 
 </main>
 

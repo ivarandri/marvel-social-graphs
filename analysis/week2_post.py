@@ -75,7 +75,7 @@ frac_recip = 2 * recip_pairs / D.number_of_edges()
 ind = [d for _, d in D.in_degree()]
 outd = [d for _, d in D.out_degree()]
 rc = []
-for s in range(50):
+for s in range(100):
     g = nx.DiGraph(nx.directed_configuration_model(ind, outd, seed=s))
     g.remove_edges_from(nx.selfloop_edges(g))
     rc.append(2 * (sum(g.has_edge(v, u) for u, v in g.edges()) // 2) / g.number_of_edges())
@@ -87,7 +87,7 @@ seq = [d for _, d in GC.degree()]
 n_gc, m_gc = GC.number_of_nodes(), GC.number_of_edges()
 
 
-def swap_stats(reps=60):
+def swap_stats(reps=100):
     C, T = [], []
     for s in range(reps):
         g = GC.copy()
@@ -97,7 +97,22 @@ def swap_stats(reps=60):
 
 
 Cs, Ts = swap_stats()
-C_gnm = np.array([nx.average_clustering(nx.gnm_random_graph(n_gc, m_gc, seed=s)) for s in range(60)])
+C_gnm = np.array([nx.average_clustering(nx.gnm_random_graph(n_gc, m_gc, seed=s)) for s in range(100)])
+C_real, T_real = nx.average_clustering(GC), nx.transitivity(GC)
+
+
+def z_and_p(real, null):
+    """z-score + one-sided empirical p-value (fraction of null draws >= real,
+    Laplace-smoothed so p never reports as exactly zero)."""
+    null = np.asarray(null)
+    z = (real - null.mean()) / null.std()
+    p = (int(np.sum(null >= real)) + 1) / (len(null) + 1)
+    return round(float(z), 1), round(float(p), 4)
+
+
+C_z, C_p = z_and_p(C_real, Cs)
+T_z, T_p = z_and_p(T_real, Ts)
+recip_z, recip_p = z_and_p(frac_recip, rc)
 
 # ---------------- three fake Marvels ----------------
 def sm(G):
@@ -129,15 +144,19 @@ out = {
         "null": round(float(np.mean(rc)), 3),
         "nullSd": round(float(np.std(rc)), 3),
         "pairs": recip_pairs,
+        "z": recip_z, "p": recip_p,
     },
     "shuffle": {
         "gc_n": n_gc, "gc_m": m_gc,
-        "C_real": round(nx.average_clustering(GC), 3),
+        "C_real": round(C_real, 3),
         "C_swap": round(float(Cs.mean()), 3), "C_swap_sd": round(float(Cs.std()), 3),
         "C_gnm": round(float(C_gnm.mean()), 3),
-        "T_real": round(nx.transitivity(GC), 3),
+        "C_z": C_z, "C_p": C_p,
+        "T_real": round(T_real, 3),
         "T_swap": round(float(Ts.mean()), 3),
+        "T_z": T_z, "T_p": T_p,
         "isolates_real": int(sum(1 for _, d in M.degree() if d == 0)),
+        "n_shuffles": len(Cs),
     },
     "models": models,
 }
