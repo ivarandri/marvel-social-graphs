@@ -12,15 +12,19 @@ Live site: https://ivarandri.github.io/marvel-social-graphs/
 index.html                landing page + post index
 posts/week1.html           week 1: degree distributions, network map, the island + isolates
 posts/week2.html           week 2: friendship paradox explorer, null-model shuffle test, three fake Marvels
+posts/week3.html           week 3: Wikipedia game to Spider-Man, break-the-universe attack chart, brokers, X-Men cliques
 assets/style.css           shared styles
 assets/app.js              shared page interactions + the interactive network (week 1) and
-                            friendship-paradox explorer + summary widgets (week 2)
+                            friendship-paradox explorer + summary widgets (week 2) and
+                            path finder, attack chart, broker bars, clique diagram (week 3)
 assets/marvel.json         graph data for the week-1 network visualization
 assets/week1_stats.json    numbers quoted in the week-1 post
 assets/week2.json          per-character + summary numbers quoted in the week-2 post
+assets/week3.json          adjacency lists, attack curves and summary numbers for the week-3 post
 data/                      the frozen course snapshot (week1_nodes.tsv, week1_edges.tsv) — shared by both weeks
 analysis/week1.py          regenerates every figure/stat in the week-1 post
 analysis/week2_post.py     regenerates assets/week2.json for the week-2 post
+analysis/week3_post.py     regenerates assets/week3.json for the week-3 post (~2 min)
 ```
 
 ## Reproduce
@@ -30,6 +34,7 @@ cd analysis
 python3 -m pip install numpy pandas networkx matplotlib   # if needed
 python3 week1.py           # writes ../assets/fig-*.png, marvel.json, week1_stats.json
 python3 week2_post.py      # writes ../assets/week2.json (matplotlib not required)
+python3 week3_post.py      # writes ../assets/week3.json (reads ../../week3_debut_years.csv if present)
 ```
 
 ## Publishing (GitHub Pages)
@@ -50,4 +55,4 @@ python3 week2_post.py      # writes ../assets/week2.json (matplotlib not require
 ## Group
 
 Ívar, Gunnlaugur, Víðir — named on the home page (`index.html`) and in the byline of each
-post (`posts/week1.html`, `posts/week2.html`).
+post (`posts/week1.html`, `posts/week2.html`, `posts/week3.html`).
