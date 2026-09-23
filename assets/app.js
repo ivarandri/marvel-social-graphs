@@ -439,3 +439,268 @@
     if (card) card.innerHTML = '<p class="muted">Could not load week2.json (' + err + ").</p>";
   });
 })();
+
+/* ============================================================
+   Week 3 — six clicks to Spider-Man, break the universe,
+   brokers vs the null, the X-Men clique  (own IIFE, no D3)
+   ============================================================ */
+(function () {
+  "use strict";
+  var root = document.getElementById("w3");
+  if (!root) return;
+  var SVGNS = "http://www.w3.org/2000/svg";
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  fetch(root.getAttribute("data-src")).then(function (r) { return r.json(); }).then(function (data) {
+    var chars = data.chars, N = chars.length;
+    var byName = {};
+    chars.forEach(function (c, i) { byName[c.short.toLowerCase()] = i; });
+    var inDeg = new Array(N).fill(0);
+    data.out.forEach(function (lst) { lst.forEach(function (j) { inDeg[j]++; }); });
+
+    /* ---------------- six clicks ---------------- */
+    var fromIn = document.getElementById("scFrom"), toIn = document.getElementById("scTo");
+    var out = document.getElementById("scResult");
+    var dl = document.getElementById("scList");
+    chars.map(function (c) { return c.short; }).sort().forEach(function (s) {
+      var o = document.createElement("option"); o.value = s; dl.appendChild(o);
+    });
+    var mode = "out";
+
+    function bfs(adj, s, t) {
+      if (s === t) return [s];
+      var prev = new Array(N).fill(-1), seen = new Array(N).fill(false), q = [s], h = 0;
+      seen[s] = true;
+      while (h < q.length) {
+        var u = q[h++];
+        for (var k = 0; k < adj[u].length; k++) {
+          var v = adj[u][k];
+          if (seen[v]) continue;
+          seen[v] = true; prev[v] = u;
+          if (v === t) {
+            var path = [t];
+            while (prev[path[0]] !== -1) path.unshift(prev[path[0]]);
+            return path;
+          }
+          q.push(v);
+        }
+      }
+      return null;
+    }
+
+    function run() {
+      var s = byName[(fromIn.value || "").trim().toLowerCase()];
+      var t = byName[(toIn.value || "Spider-Man").trim().toLowerCase()];
+      if (s === undefined || t === undefined) {
+        out.innerHTML = '<p class="muted">Pick two characters from the list.</p>';
+        return;
+      }
+      var path = bfs(mode === "out" ? data.out : data.und, s, t);
+      if (!path) {
+        var why;
+        if (mode === "out" && data.out[s].length === 0)
+          why = esc(chars[s].short) + "'s page links to no other Marvel superhero: there is nowhere to click.";
+        else if (mode === "out" && inDeg[t] === 0)
+          why = "No Marvel superhero page links to " + esc(chars[t].short) + ".";
+        else if (!bfs(data.und, s, t))
+          why = "They live in different pieces of the universe: one of them is a loner or on the 9-character island.";
+        else
+          why = "Following links you can't get there, but ignoring direction you can (try the other mode). One-way streets!";
+        out.innerHTML = '<div class="sc-verdict fail">No path!</div><p class="sc-why">' + why + "</p>";
+        return;
+      }
+      var steps = path.length - 1;
+      var html = '<div class="sc-verdict">' + (steps === 0 ? "You're already there" :
+        steps + (steps === 1 ? " click" : " clicks")) + "</div><div class=\"sc-chain\">";
+      path.forEach(function (i, n) {
+        var tilt = (n % 2 ? 1.5 : -1.5) + "deg";
+        if (n > 0) html += '<span class="sc-arrow" style="--i:' + n + '">→</span>';
+        html += '<a class="sc-card' + (n === 0 || n === steps ? " ends" : "") + '" style="--i:' + n + ";--tilt:" + tilt +
+          '" href="' + esc(chars[i].url) + '" target="_blank" rel="noopener">' + esc(chars[i].short) + "</a>";
+      });
+      html += "</div>";
+      if (mode === "out" && steps > 0)
+        html += '<p class="sc-why">Every arrow is a link written in the running text of the page on its left. Click a card to check it on Wikipedia.</p>';
+      out.innerHTML = html;
+    }
+
+    function set(f, t) { fromIn.value = f; toIn.value = t; run(); }
+    var hard = 0, esc_ = 0;
+    fromIn.addEventListener("change", run);
+    toIn.addEventListener("change", run);
+    document.getElementById("scSwap").addEventListener("click", function () { set(toIn.value || "Spider-Man", fromIn.value); });
+    document.getElementById("scRandom").addEventListener("click", function () {
+      var pool = chars.map(function (c, i) { return i; }).filter(function (i) { return data.out[i].length > 0 && i !== data.spider; });
+      set(chars[pool[Math.floor(Math.random() * pool.length)]].short, toIn.value || "Spider-Man");
+    });
+    document.getElementById("scHard").addEventListener("click", function () {
+      var f = data.clicks.toFarthest; setMode("out"); set(f[hard++ % f.length], "Spider-Man");
+    });
+    document.getElementById("scEscape").addEventListener("click", function () {
+      var f = data.clicks.fromFarthest; setMode("out"); set("Spider-Man", f[esc_++ % f.length]);
+    });
+    function setMode(m) {
+      mode = m;
+      root.querySelectorAll(".sc-controls .chip[data-mode]").forEach(function (c) {
+        c.classList.toggle("on", c.getAttribute("data-mode") === m);
+      });
+    }
+    root.querySelectorAll(".sc-controls .chip[data-mode]").forEach(function (c) {
+      c.addEventListener("click", function () { setMode(c.getAttribute("data-mode")); run(); });
+    });
+    var qs = new URLSearchParams(location.search);            // shareable: ?from=Thena&to=Spider-Man&mode=und
+    if (qs.get("mode") === "und") setMode("und");
+    set(qs.get("from") || data.clicks.toFarthest[0], qs.get("to") || "Spider-Man");
+
+    /* histograms: how many clicks to reach him / to get away from him */
+    function hist(title, rows, cls, total) {
+      var mx = Math.max.apply(null, rows.map(function (r) { return r[1]; }));
+      return '<div class="panel ' + cls + '"><h4>' + title + "</h4>" + rows.map(function (r) {
+        return '<div class="hist-row"><span>' + r[0] + (r[0] === 1 ? " click" : " clicks") +
+          '</span><span class="bar" style="width:' + Math.max(2, 100 * r[1] / mx) + '%"></span><span>' + r[1] + "</span></div>";
+      }).join("") + (total ? '<p class="muted" style="margin:.5rem 0 0;font-size:.8rem">' + total + "</p>" : "") + "</div>";
+    }
+    document.getElementById("scHist").innerHTML =
+      hist("clicks needed to reach Spider-Man", data.clicks.toHist, "to",
+        data.clicks.cantReach + " characters can't reach him at all") +
+      hist("clicks needed to get away from him", data.clicks.fromHist, "from", "starting from his page (9 out-links)");
+
+    /* ---------------- break the universe ---------------- */
+    var A = data.attack, W = 720, H = 360, m = { l: 52, r: 16, t: 16, b: 42 };
+    var svg = document.getElementById("atkChart");
+    var sx = function (k) { return m.l + (W - m.l - m.r) * k / A.K; };
+    var sy = function (s) { return m.t + (H - m.t - m.b) * (1 - s / A.n); };
+    var g = el("g", { "class": "grid" }, svg);
+    [0, 50, 100, 150, 200, 250].forEach(function (v) {
+      el("line", { x1: m.l, x2: W - m.r, y1: sy(v), y2: sy(v) }, g);
+      el("text", { x: m.l - 8, y: sy(v) + 4, "text-anchor": "end" }, svg).textContent = v;
+    });
+    [0, 20, 40, 60, 80, 100].forEach(function (k) {
+      el("text", { x: sx(k), y: H - m.b + 18, "text-anchor": "middle" }, svg).textContent = k;
+    });
+    el("text", { x: (m.l + W - m.r) / 2, y: H - 6, "text-anchor": "middle" }, svg).textContent = "characters deleted";
+    el("text", { x: 14, y: (m.t + H - m.b) / 2, "text-anchor": "middle",
+      transform: "rotate(-90 14 " + (m.t + H - m.b) / 2 + ")" }, svg).textContent = "size of the biggest connected piece";
+    var css = getComputedStyle(document.documentElement);
+    var series = [
+      { key: "random", color: "#8a8578", dash: "6 5", label: "Random" },
+      { key: "degree", color: css.getPropertyValue("--blue").trim() || "#1a6dff", label: "Popularity Hunter" },
+      { key: "betweenness", color: css.getPropertyValue("--red").trim() || "#e62429", label: "Broker Hunter" }
+    ];
+    series.forEach(function (s, i) {
+      el("path", { d: A[s.key].map(function (v, k) { return (k ? "L" : "M") + sx(k).toFixed(1) + "," + sy(v).toFixed(1); }).join(""),
+        fill: "none", stroke: s.color, "stroke-width": 3, "stroke-dasharray": s.dash || "none" }, svg);
+      el("rect", { x: W - m.r - 170, y: m.t + 6 + i * 20, width: 14, height: 4, fill: s.color }, svg);
+      el("text", { x: W - m.r - 150, y: m.t + 12 + i * 20 }, svg).textContent = s.label;
+      s.dot = el("circle", { r: 6, fill: s.color, stroke: "#16130f", "stroke-width": 2 }, svg);
+    });
+    var marker = el("line", { y1: m.t, y2: H - m.b, stroke: "currentColor", "stroke-dasharray": "3 3" }, svg);
+    marker.style.color = "var(--ink)";
+
+    var slider = document.getElementById("atkSlider"), kLabel = document.getElementById("atkK");
+    var readout = document.getElementById("atkReadout");
+    function draw(k) {
+      marker.setAttribute("x1", sx(k)); marker.setAttribute("x2", sx(k));
+      series.forEach(function (s) { s.dot.setAttribute("cx", sx(k)); s.dot.setAttribute("cy", sy(A[s.key][k])); });
+      kLabel.textContent = k + " deleted";
+      function box(title, key, order) {
+        var gone = k === 0 ? "nobody yet" : order ? "last deleted: <strong>" + esc(order[k - 1]) + "</strong>" : "anyone at all";
+        return "<div><span class=\"muted\">" + title + '</span><b>' + Math.round(A[key][k]) + " / " + A.n +
+          '</b><span class="gone">' + gone + "</span></div>";
+      }
+      readout.innerHTML = box("Random", "random") + box("Popularity Hunter", "degree", A.degreeOrder) +
+        box("Broker Hunter", "betweenness", A.betweennessOrder);
+    }
+    slider.addEventListener("input", function () { draw(+slider.value); });
+    var timer = null, play = document.getElementById("atkPlay");
+    play.addEventListener("click", function () {
+      if (timer) { clearInterval(timer); timer = null; play.textContent = "▶ play"; return; }
+      if (+slider.value >= A.K) slider.value = 0;
+      play.textContent = "❚❚ pause";
+      timer = setInterval(function () {
+        var k = +slider.value + 1;
+        slider.value = k; draw(k);
+        if (k >= A.K) { clearInterval(timer); timer = null; play.textContent = "▶ play"; }
+      }, 70);
+    });
+    draw(0);
+
+    /* ---------------- brokers vs the degree-preserving null ---------------- */
+    var bb = document.getElementById("brokerBars");
+    var mx = Math.max.apply(null, data.brokers.map(function (b) { return Math.max(b.real, b.null); })) / 0.8;  // leave room for labels
+    bb.innerHTML = data.brokers.map(function (b) {
+      var tag = b.z >= 2 ? "survive" : "die";
+      var word = b.z >= 2 ? "broker" : b.z <= -2 ? "anti-broker" : "just popular";
+      return '<div class="bar-row"><div class="lab">' + esc(b.short) + ' <span class="muted">(' + b.deg + ' links)</span><br>' +
+        '<span class="tag2 ' + tag + '">z = ' + (b.z > 0 ? "+" : "−") + Math.abs(b.z) + " · " + word + "</span></div>" +
+        '<div class="bar-track"><div class="seg real"><span class="fill" style="width:' + (100 * b.real / mx) +
+        '%"></span><span>real ' + (100 * b.real).toFixed(1) + "%</span></div>" +
+        '<div class="seg nulls"><span class="fill" style="width:' + (100 * b.null / mx) +
+        '%"></span><span>shuffled ' + (100 * b.null).toFixed(1) + "%</span></div></div></div>";
+    }).join("");
+
+    /* ---------------- the X-Men clique ---------------- */
+    var C = data.cliques, members = C.core.concat(C.extras);
+    var cs = document.getElementById("cqChart"), cx = 220, cy = 200, R = 150;
+    var pos = {}, circles = {}, labels = {};
+    members.forEach(function (nm, i) {
+      var a = -Math.PI / 2 + 2 * Math.PI * i / members.length;
+      pos[nm] = [cx + R * Math.cos(a), cy + R * Math.sin(a)];
+    });
+    var lines = [];
+    members.forEach(function (a, i) {
+      members.slice(i + 1).forEach(function (b) {
+        var ia = byName[a.toLowerCase()], ib = byName[b.toLowerCase()];
+        if (data.und[ia].indexOf(ib) >= 0)
+          lines.push({ a: a, b: b, e: el("line", { x1: pos[a][0], y1: pos[a][1], x2: pos[b][0], y2: pos[b][1] }, cs) });
+      });
+    });
+    members.forEach(function (nm) {
+      var core = C.core.indexOf(nm) >= 0;
+      circles[nm] = el("circle", { cx: pos[nm][0], cy: pos[nm][1], r: 13, fill: core ? "#e62429" : "#ffd23f" }, cs);
+      var p = pos[nm], right = p[0] >= cx;
+      labels[nm] = el("text", { x: p[0] + (right ? 18 : -18), y: p[1] + 4, "text-anchor": right ? "start" : "end" }, cs);
+      labels[nm].textContent = nm.replace(" (Guardians of the Galaxy)", "");
+    });
+    function showClique(i) {
+      var set = i === null ? null : C.eights[i];
+      lines.forEach(function (l) {
+        l.e.classList.toggle("on", !!set && set.indexOf(l.a) >= 0 && set.indexOf(l.b) >= 0);
+      });
+      members.forEach(function (nm) {
+        var dim = !!set && set.indexOf(nm) < 0;
+        circles[nm].classList.toggle("dim", dim); labels[nm].classList.toggle("dim", dim);
+      });
+      document.getElementById("cqNote").innerHTML = set ?
+        "Clique " + (i + 1) + ": the core six plus <strong>" + esc(set.filter(function (x) { return C.core.indexOf(x) < 0; })
+          .map(function (x) { return x.replace(" (Guardians of the Galaxy)", ""); }).join(" and ")) +
+        "</strong>. All 28 pairs linked." :
+        "Red: the six who are in all six cliques. Pick a clique to light up its 28 links.";
+      document.querySelectorAll("#cqButtons .chip").forEach(function (b) {
+        b.classList.toggle("on", b.getAttribute("data-i") === String(i));
+      });
+    }
+    var btns = document.getElementById("cqButtons");
+    btns.innerHTML = '<button class="chip on" type="button" data-i="null">all links</button>' +
+      C.eights.map(function (_, i) { return '<button class="chip" type="button" data-i="' + i + '">clique ' + (i + 1) + "</button>"; }).join("");
+    btns.querySelectorAll(".chip").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var v = b.getAttribute("data-i"); showClique(v === "null" ? null : +v);
+      });
+    });
+  }).catch(function (err) {
+    var r = document.getElementById("scResult");
+    if (r) r.innerHTML = '<p class="muted">Could not load week3.json (' + err + ").</p>";
+  });
+})();

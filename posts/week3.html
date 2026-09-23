@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 3 — All roads lead to Spider-Man</title>
+<meta name="description" content="Week 3 of DTU 02805: play the Wikipedia game to Spider-Man, try to break the Marvel universe, and find the real brokers against the right null.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="bolt">⚡</span>Marvel Social Graphs</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="week1.html">Week&nbsp;1</a>
+      <a href="week2.html">Week&nbsp;2</a>
+      <a href="week3.html" class="active">Week&nbsp;3</a>
+      <a href="https://sunelehmann.com/socialgraphs2026-web/" target="_blank" rel="noopener">Course</a>
+      <button id="themeToggle" type="button">☾</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="w3" data-src="../assets/week3.json">
+
+  <section class="hero reveal">
+    <span class="kicker">Week 3 · paths, centrality, mixing, cliques</span>
+    <h1>All roads lead to<br><span class="mark">Spider-Man.</span></h1>
+    <p class="post-meta">By <span class="tag">Ívar</span> <span class="tag">Gunnlaugur</span> <span class="tag">Víðir</span>
+    &nbsp;·&nbsp; We played the Wikipedia game, tried to destroy the Marvel universe, and went looking for the characters who really hold it together.</p>
+  </section>
+
+  <section class="reveal">
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="4">0</div><div class="label">clicks, max, to reach Spider-Man</div></div>
+      <div class="stat"><div class="num" data-count="6">0</div><div class="label">clicks to escape him</div></div>
+      <div class="stat"><div class="num" data-count="5">0</div><div class="label">characters lost if you delete him</div></div>
+      <div class="stat"><div class="num" data-count="8">0</div><div class="label">X-Men in one mega-clique</div></div>
+    </div>
+  </section>
+
+  <!-- ================= SIX CLICKS ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">The Wikipedia game</span></h2>
+    <p class="reveal">You know the game: start on a random Wikipedia page and reach a target by clicking only
+    links in the article text. We played it on our 303 Marvel pages with Spider-Man as the target. The
+    arrows matter here: you can only click links the page actually contains.</p>
+    <p class="reveal">It's absurdly easy. <strong>106 pages link straight to him</strong>, and anyone who can reach
+    him at all gets there in at most <strong>4 clicks</strong>. Getting <em>away</em> from him is a different
+    story: his page links to only 9 characters, so reaching the far corners from Spider-Man takes up to
+    <strong>6 clicks</strong>. Try it:</p>
+  </section>
+
+  <div class="sc-wrap reveal">
+    <div class="sc-controls">
+      <label>from <input id="scFrom" type="text" list="scList" placeholder="any character…"></label>
+      <button class="chip" id="scSwap" type="button" title="swap">⇄</button>
+      <label>to <input id="scTo" type="text" list="scList" placeholder="Spider-Man"></label>
+      <datalist id="scList"></datalist>
+    </div>
+    <div class="sc-controls">
+      <button class="chip on" data-mode="out" type="button">follow the links</button>
+      <button class="chip" data-mode="und" type="button">ignore direction</button>
+      <span class="sc-sep"></span>
+      <button class="chip" id="scRandom" type="button">🎲 random start</button>
+      <button class="chip" id="scHard" type="button">hardest to reach him</button>
+      <button class="chip" id="scEscape" type="button">escape from him</button>
+    </div>
+    <div id="scResult" class="sc-result"><p class="muted">Loading…</p></div>
+  </div>
+
+  <div class="sc-hist reveal" id="scHist"></div>
+
+  <section class="narrow">
+    <p class="reveal"><strong>The longest trips.</strong> Only three characters need all 4 clicks to reach
+    Spider-Man: Mahr Vehl, Thin Man and Thena. Each is a deep cut whose page links only to other deep cuts.
+    Thena's route runs Makkari → Quasar → Nova → Spider-Man: from the Eternals out through the cosmic heroes.
+    In the other direction, Box (Alpha Flight) and Motormouth are 6 clicks from Spider-Man's page, because
+    you first have to leave his tight circle of nine and cross the universe. And 29 characters can't be
+    reached at all: the 17 loners, the 9-character island from week 1, and three pages (Peggy Carter,
+    Synapse, The Witness) that link to no other Marvel superhero, so there's nowhere to click next.</p>
+  </section>
+
+  <!-- ================= BREAK THE UNIVERSE ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Try to break the Marvel universe</span></h2>
+    <p class="reveal">Which single character holds the universe together? We deleted each of the 277
+    characters in the giant component in turn and checked who got cut off. The answer is almost nobody.
+    Delete <strong>Spider-Man</strong> and you lose exactly <strong>5</strong> characters: the five pages
+    whose only link is to him (Enigma, Ethan Edwards, Helix, Phil Grayfield and Thunderclap). Everyone else
+    still has a route around the hole. Black Widow comes second (3), and Doctor Strange third (2).</p>
+    <p class="reveal">So one deletion does nothing. What about a series of deletions? Below, three villains
+    delete characters one at a time. <span class="v-rand">Random</span> picks anyone.
+    <span class="v-deg">The Popularity Hunter</span> always deletes the current highest-degree character.
+    <span class="v-bet">The Broker Hunter</span> recomputes betweenness after every deletion and takes out
+    whoever is now the biggest bridge. Drag the slider or press play:</p>
+  </section>
+
+  <div class="atk-wrap reveal">
+    <svg id="atkChart" viewBox="0 0 720 360" role="img" aria-label="Giant component size as characters are removed"></svg>
+    <div class="atk-controls">
+      <button class="chip" id="atkPlay" type="button">▶ play</button>
+      <input id="atkSlider" type="range" min="0" max="100" value="0" aria-label="characters removed">
+      <span id="atkK" class="atk-k">0 removed</span>
+    </div>
+    <div id="atkReadout" class="atk-readout"></div>
+  </div>
+
+  <section class="narrow">
+    <p class="reveal">Random deletion is hopeless. After 100 deletions the giant component still holds about
+    169 characters, only about 8 fewer than the 177 still standing. Both hunters halve the universe in
+    60–75 deletions, and for the first 50 they are neck and neck: the same hubs top both lists. Then they
+    split. The Popularity Hunter keeps deleting whoever still has the most links, while the Broker Hunter
+    targets the bridges between the X-Men, the cosmic characters, the street-level heroes and the rest.
+    <strong>At 80 deletions the Broker Hunter has left a giant piece of only 42 characters; the Popularity
+    Hunter's is still 120.</strong> Popularity keeps the universe busy; brokers keep it in one piece.</p>
+  </section>
+
+  <!-- ================= BROKERS ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">The real broker is Hercules</span></h2>
+    <p class="reveal">Spider-Man has the highest betweenness: 23% of all shortest paths run through him. But
+    is that a finding? We rewired the network 200 times keeping every character's number of links, and
+    asked how much betweenness each character gets <em>just from their degree</em>:</p>
+    <div class="bars reveal" id="brokerBars"></div>
+    <p class="reveal">Spider-Man's 23% is exactly what 106 links buy you in any wiring. It's his popularity,
+    not his position. <strong>Hercules</strong> has twice what his 26 links predict, 4.3 standard deviations
+    above the shuffles. He's an Olympian god who is also an Avenger, a Champion and the Hulk's best friend,
+    so his page joins the gods and cosmic heroes to the Earth-based teams. Black Widow scores just as high,
+    but we checked: most of her surplus comes from being the only link to three obscure characters
+    (Blue Eagle, Rockman and The Witness). <strong>Black Cat</strong> is the opposite: 28 links but a third of
+    the expected betweenness, because 24 of her 28 neighbours are also Spider-Man's, so every path near her
+    has a shortcut around her.</p>
+  </section>
+
+  <!-- ================= CLIQUES ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">The X-Men are one giant clique</span></h2>
+    <p class="reveal">The biggest groups in which <em>everyone</em> links to everyone have 8 members. There are
+    six of them, and all of them are X-Men. They share a core of six (Betsy Braddock, Cyclops, Emma Frost,
+    Jean Grey, Rachel Summers and Wolverine), and each adds two of Cable, Jubilee, Northstar, Storm and
+    Phoenix. Click through them:</p>
+  </section>
+
+  <div class="cq-wrap reveal">
+    <svg id="cqChart" viewBox="0 0 440 400" role="img" aria-label="The eleven X-Men in the 8-cliques"></svg>
+    <div class="cq-side">
+      <div class="cq-buttons" id="cqButtons"></div>
+      <p class="muted" id="cqNote">Red: the six who are in all six cliques. Pick a clique to light up its 28 links.</p>
+    </div>
+  </div>
+
+  <section class="narrow">
+    <p class="reveal"><strong>Bonus: comic eras stick together.</strong> We also pulled each character's
+    first-appearance year from their Wikipedia infobox. <span id="homText">28% of links join two characters
+    from the same decade, against 17% if you shuffle the years among the characters</span>, a z-score of
+    +8.6 against 1000 shuffles. The Golden-Age heroes (the 1930s–40s Invaders) link to each other almost
+    six times more than chance would give. The 1960s characters (Spider-Man, Hulk, Black Widow) barely do,
+    because everyone links to them.</p>
+  </section>
+
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">What surprised us</span></h2>
+    <blockquote class="reveal">
+      <strong>The biggest hub is also one of the easiest to route around.</strong> Spider-Man is on nearly a
+      quarter of all shortest paths, yet deleting him cuts off only five one-link characters. The universe
+      has been written so densely around him that every page he connects has another way through. The
+      characters you really can't lose are the quiet bridges between corners, such as Hercules, and you only
+      see them once you compare against the right null.
+    </blockquote>
+  </section>
+
+  <hr>
+  <p class="reveal muted">Data: the frozen week-1 Marvel snapshot, plus first-appearance years from the
+  Wikipedia API. Reproduce with <code>cd analysis &amp;&amp; python3 week3_post.py</code> (writes
+  <code>assets/week3.json</code>); the full working is in our Week 3 notebook.</p>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    Built with an LLM for DTU 02805 · data © Wikipedia contributors (CC BY-SA) ·
+    <a href="https://sunelehmann.com/socialgraphs2026-web/weeks/week3.html" target="_blank" rel="noopener">week 3 brief</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

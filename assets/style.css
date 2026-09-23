@@ -348,3 +348,78 @@ footer.site a { color: var(--yellow); }
   padding: .05rem .4rem; border: 2px solid var(--ink); }
 .bar-row .tag2.survive { background: var(--green); color: #fff; }
 .bar-row .tag2.die { background: var(--yellow); color: var(--ink); }
+
+/* ============================================================
+   Week 3 — six clicks, break the universe, brokers, cliques
+   ============================================================ */
+.sc-wrap, .atk-wrap, .cq-wrap {
+  background: var(--panel); border: 3px solid var(--rule); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 1rem 1.1rem 1.2rem; margin: 1.2rem 0;
+}
+.sc-controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .7rem; }
+.sc-controls label { display: flex; align-items: center; gap: .4rem; font-weight: 700;
+  text-transform: uppercase; font-size: .8rem; letter-spacing: .04em; flex: 1; min-width: 12rem; }
+.sc-controls input[type=text] {
+  font: inherit; font-weight: 400; text-transform: none; letter-spacing: 0; flex: 1;
+  padding: .45rem .7rem; border: 3px solid var(--rule); border-radius: 8px;
+  background: var(--paper); color: var(--ink); box-shadow: var(--shadow-sm);
+}
+.sc-sep { flex: 0 0 .6rem; }
+.sc-result { margin-top: .4rem; }
+.sc-verdict {
+  display: inline-block; font-family: "Anton", sans-serif; text-transform: uppercase;
+  font-size: clamp(1.3rem, 4vw, 2rem); line-height: 1; padding: .45rem .7rem; margin-bottom: 1rem;
+  border: 3px solid var(--ink); box-shadow: var(--shadow-sm); background: var(--yellow); color: var(--ink);
+}
+.sc-verdict.fail { background: var(--ink); color: var(--paper); }
+.sc-chain { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.sc-card {
+  background: var(--paper); border: 3px solid var(--ink); border-radius: 8px; padding: .45rem .7rem;
+  font-weight: 700; box-shadow: var(--shadow-sm); color: var(--ink); transform: rotate(var(--tilt, 0deg));
+  animation: pop .35s ease both; animation-delay: calc(var(--i) * 90ms);
+}
+.sc-card:hover { text-decoration: none; background: var(--yellow); }
+.sc-card.ends { background: var(--red); color: #fff; }
+.sc-arrow { font-family: "Anton", sans-serif; color: var(--red); font-size: 1.3rem;
+  animation: pop .35s ease both; animation-delay: calc(var(--i) * 90ms); }
+@keyframes pop { from { opacity: 0; transform: scale(.6) rotate(var(--tilt, 0deg)); } }
+@media (prefers-reduced-motion: reduce) { .sc-card, .sc-arrow { animation: none; } }
+.sc-why { margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
+
+.sc-hist { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0 1.5rem; }
+.sc-hist .panel { padding: .9rem 1rem; }
+.sc-hist h4 { font-family: "Anton", sans-serif; text-transform: uppercase; margin: 0 0 .6rem; font-size: 1rem; }
+.hist-row { display: grid; grid-template-columns: 4.5rem 1fr 2.4rem; gap: .5rem; align-items: center;
+  font-size: .82rem; margin: .2rem 0; }
+.hist-row .bar { height: 14px; border: 2px solid var(--ink); border-radius: 3px; background: var(--red); }
+.sc-hist .from .hist-row .bar { background: var(--blue); }
+@media (max-width: 640px) { .sc-hist { grid-template-columns: 1fr; } }
+
+.v-rand, .v-deg, .v-bet { font-weight: 700; padding: 0 .3rem; border-radius: 3px; color: #fff; }
+.v-rand { background: #8a8578; } .v-deg { background: var(--blue); } .v-bet { background: var(--red); }
+#atkChart { width: 100%; height: auto; display: block; }
+#atkChart .grid line { stroke: var(--rule); stroke-opacity: .25; }
+#atkChart text { font: 12px "Barlow", sans-serif; fill: var(--ink); }
+.atk-controls { display: flex; align-items: center; gap: .8rem; margin-top: .6rem; }
+.atk-controls input[type=range] { flex: 1; accent-color: var(--red); }
+.atk-k { font-family: "Anton", sans-serif; min-width: 7rem; text-align: right; }
+.atk-readout { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-top: .8rem; font-size: .88rem; }
+.atk-readout div { border: 2px solid var(--ink); border-radius: 6px; padding: .45rem .6rem; background: var(--paper); }
+.atk-readout b { font-family: "Anton", sans-serif; font-size: 1.4rem; display: block; line-height: 1.1; }
+.atk-readout .gone { color: var(--muted); font-size: .8rem; }
+@media (max-width: 640px) { .atk-readout { grid-template-columns: 1fr; } }
+
+.cq-wrap { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem; align-items: center; }
+#cqChart { width: 100%; height: auto; }
+#cqChart line { stroke: var(--muted); stroke-opacity: .35; stroke-width: 1.4; transition: all .25s; }
+#cqChart line.on { stroke: var(--red); stroke-opacity: 1; stroke-width: 2.6; }
+#cqChart circle { stroke: var(--ink); stroke-width: 2; transition: all .25s; }
+#cqChart text { font: 700 12px "Barlow", sans-serif; fill: var(--ink); paint-order: stroke;
+  stroke: var(--panel); stroke-width: 4px; }
+#cqChart .dim { opacity: .25; }
+.cq-buttons { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: .8rem; }
+@media (max-width: 640px) { .cq-wrap { grid-template-columns: 1fr; } }
+#brokerBars .bar-row { grid-template-columns: 12rem 1fr; }
+#brokerBars .bar-track .seg span:last-child { white-space: nowrap; }
+#brokerBars .tag2 { font-family: "Barlow", sans-serif; font-weight: 700; text-transform: none; font-size: .78rem; }
+@media (max-width: 640px) { #brokerBars .bar-row { grid-template-columns: 1fr; } }
