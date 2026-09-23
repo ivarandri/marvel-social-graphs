@@ -78,6 +78,8 @@ h3 { font-size: 1.25rem; margin: 2rem 0 .5rem; letter-spacing: .02em; }
 h2 .mark, h1 .mark {
   background: linear-gradient(180deg, transparent 55%, var(--yellow) 55%);
   padding: 0 .15em;
+  margin-left: -.15em;   /* every .mark starts its own line — cancel the left
+                             padding so that line's text stays flush with the rest */
 }
 p, ul, ol { margin: 0 0 1.2rem; }
 a { color: var(--red); text-decoration: none; font-weight: 600; }
@@ -141,7 +143,7 @@ header.site nav a.active { background: var(--yellow); color: var(--ink); border-
 #themeToggle:hover { background: var(--yellow); color: var(--ink); }
 
 /* ---------- hero ---------- */
-.hero { padding: 3.5rem 0 1rem; }
+.hero { padding: 3.5rem 0 .5rem; }
 .hero .kicker {
   display: inline-block; background: var(--blue); color: #fff;
   font-family: "Anton", sans-serif; text-transform: uppercase; letter-spacing: .05em;
@@ -277,7 +279,7 @@ ul.posts p { margin: .4rem 0 0; color: var(--muted); font-size: .95rem; }
   border-radius: 999px; padding: .2rem .8rem; font-weight: 700; font-size: .9rem;
   box-shadow: var(--shadow-sm);
 }
-.post-meta { color: var(--muted); font-size: .95rem; margin: 0 0 2rem; }
+.post-meta { color: var(--muted); font-size: .95rem; margin: 1.5rem 0 0; }
 .post-meta .tag { background: var(--ink); color: var(--paper); padding: .1rem .5rem; border-radius: 4px; font-weight: 700; }
 
 /* ---------- reveal on scroll (only when JS runs) ---------- */
@@ -303,9 +305,10 @@ footer.site a { color: var(--yellow); }
   box-shadow: var(--shadow); padding: 1rem 1.1rem 1.3rem; margin: 1.2rem 0;
 }
 .fp-search { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: 1rem; }
-.fp-search input {
+.fp-search select {
   font: inherit; padding: .45rem .7rem; border: 3px solid var(--rule); border-radius: 8px;
   background: var(--paper); color: var(--ink); box-shadow: var(--shadow-sm); flex: 1; min-width: 11rem;
+  cursor: pointer;
 }
 .fp-verdict {
   font-family: "Anton", sans-serif; text-transform: uppercase; letter-spacing: .02em;

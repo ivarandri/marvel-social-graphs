@@ -9,19 +9,27 @@ Live site: https://ivarandri.github.io/marvel-social-graphs/
 ## Layout
 
 ```
-index.html          landing page + post index
-posts/week1.html    the weekly write-ups
-assets/             style.css + generated figures (fig-*.png) + week1_stats.json
-data/               the frozen course snapshot (week1_nodes.tsv, week1_edges.tsv)
-analysis/week1.py   regenerates every figure and stat in the week-1 post
+index.html                landing page + post index
+posts/week1.html           week 1: degree distributions, network map, the island + isolates
+posts/week2.html           week 2: friendship paradox explorer, null-model shuffle test, three fake Marvels
+assets/style.css           shared styles
+assets/app.js              shared page interactions + the interactive network (week 1) and
+                            friendship-paradox explorer + summary widgets (week 2)
+assets/marvel.json         graph data for the week-1 network visualization
+assets/week1_stats.json    numbers quoted in the week-1 post
+assets/week2.json          per-character + summary numbers quoted in the week-2 post
+data/                      the frozen course snapshot (week1_nodes.tsv, week1_edges.tsv) — shared by both weeks
+analysis/week1.py          regenerates every figure/stat in the week-1 post
+analysis/week2_post.py     regenerates assets/week2.json for the week-2 post
 ```
 
-## Reproduce the figures
+## Reproduce
 
 ```bash
 cd analysis
 python3 -m pip install numpy pandas networkx matplotlib   # if needed
-python3 week1.py                                          # writes ../assets/fig-*.png
+python3 week1.py           # writes ../assets/fig-*.png, marvel.json, week1_stats.json
+python3 week2_post.py      # writes ../assets/week2.json (matplotlib not required)
 ```
 
 ## Publishing (GitHub Pages)
@@ -39,7 +47,7 @@ python3 week1.py                                          # writes ../assets/fig
 
 `.nojekyll` is present so Pages serves the files as-is (no Jekyll build).
 
-## Editing group identity
+## Group
 
-Group name and members are marked with `EDIT THIS BLOCK` comments in `index.html`
-and appear as "Group N" in `posts/week1.html`.
+Ívar, Gunnlaugur, Víðir — named on the home page (`index.html`) and in the byline of each
+post (`posts/week1.html`, `posts/week2.html`).
