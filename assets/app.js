@@ -705,3 +705,344 @@
     if (r) r.innerHTML = '<p class="muted">Could not load week3.json (' + err + ").</p>";
   });
 })();
+
+/* ============================================================
+   Week 4 — the sorting hat, snip the threads, Aristotle's rooms
+   (own IIFE, no D3; the network is drawn on a canvas)
+   ============================================================ */
+(function () {
+  "use strict";
+  var root = document.getElementById("w4");
+  if (!root) return;
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  var HOUSE_COL = {
+    "Immanuel Kant": "#1a6dff", "The Buddha": "#8b5cf6", "Aristotle": "#ffd23f", "Confucius": "#ff7a1a",
+    "René Descartes": "#16b364", "Bertrand Russell": "#ff5fa2", "Thomas Aquinas": "#e62429",
+    "Avicenna": "#00b8d9", "Plato": "#b7791f", "Karl Marx": "#7a1f1f", "John Locke": "#6b8e23"
+  };
+  var MINOR = "#a8a29a";
+  function textOn(hex) {                       // dark text on light fills, white on dark ones
+    var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    return 0.299 * r + 0.587 * g + 0.114 * b > 140 ? "#16130f" : "#fff";
+  }
+  function lastName(n) {
+    var special = { "The Buddha": "Buddha", "Thomas Aquinas": "Aquinas", "René Descartes": "Descartes",
+      "Immanuel Kant": "Kant", "Bertrand Russell": "Russell", "Karl Marx": "Marx", "John Locke": "Locke",
+      "David Hume": "Hume", "Al-Ghazali": "al-Ghazali", "Władysław Tatarkiewicz": "Tatarkiewicz",
+      "Jules Barthélemy-Saint-Hilaire": "Barthélemy-Saint-Hilaire", "Hans Kelsen": "Kelsen", "Jerome Frank": "Frank" };
+    return special[n] || n;
+  }
+
+  fetch(root.getAttribute("data-src")).then(function (r) { return r.json(); }).then(function (data) {
+    var P = data.p, H = data.houses, S = data.stats, R = S.runs;
+    var hcol = H.map(function (h) { return HOUSE_COL[h.id] || MINOR; });
+    var byName = {};
+    P.forEach(function (p, i) { byName[p.n.toLowerCase()] = i; });
+    function counts(p) {
+      var c = {};
+      p.v.forEach(function (h) { c[h] = (c[h] || 0) + 1; });
+      return Object.keys(c).map(function (h) { return [+h, c[h]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    }
+    var modal = P.map(function (p) { return counts(p)[0][0]; });
+
+    /* numbers quoted in the text */
+    var fmt = {
+      Qnull: S.Qnull.toFixed(2), nmi: S.nmiMin.toFixed(2) + "–" + S.nmiMax.toFixed(2),
+      Qw: S.Qw.toFixed(2), nmiW: S.nmiW.toFixed(2)
+    };
+    root.querySelectorAll("[data-f]").forEach(function (e) {
+      var k = e.getAttribute("data-f"); if (fmt[k]) e.textContent = fmt[k];
+    });
+
+    /* ---------------- the sorting hat ---------------- */
+    var input = document.getElementById("hatInput"), card = document.getElementById("hatCard");
+    var dl = document.getElementById("hatList");
+    P.map(function (p) { return p.n; }).sort().forEach(function (n) {
+      var o = document.createElement("option"); o.value = n; dl.appendChild(o);
+    });
+    function houseName(h) { return "House " + lastName(H[h].id); }
+
+    function sort(i) {
+      var p = P[i], c = counts(p), top = c[0], nh = c.length;
+      var self = H[top[0]].id === p.n;
+      var verdict, cls;
+      if (self && top[1] === R) { verdict = "Heads their own house, every time"; cls = "loyal"; }
+      else if (top[1] === R) { verdict = "Loyal: " + houseName(top[0]); cls = "loyal"; }
+      else if (top[1] >= 15) { verdict = "Mostly " + houseName(top[0]); cls = "mostly"; }
+      else if (nh >= 4) { verdict = "Hopelessly torn: " + nh + " houses"; cls = "torn"; }
+      else { verdict = "Torn: " + lastName(H[c[0][0]].id) + " or " + lastName(H[c[1][0]].id) + "?"; cls = "torn"; }
+      if (self && top[1] < R) verdict = "Heads their own house in " + top[1] + " of " + R + " runs";
+
+      var tokens = p.v.map(function (h, r) {
+        return '<span class="hat-tok" style="--c:' + hcol[h] + ";color:" + textOn(hcol[h]) + ";--i:" + r + '" title="run ' + (r + 1) + ": " +
+          esc(houseName(h)) + '">' + esc(lastName(H[h].id).charAt(0)) + "</span>";
+      }).join("");
+      var bars = c.map(function (hc) {
+        return '<div class="hat-row"><span class="hat-hn">' + esc(houseName(hc[0])) + '</span><span class="hat-bar"><span style="width:' +
+          (100 * hc[1] / R) + "%;background:" + hcol[hc[0]] + '"></span></span><b>' + hc[1] + "</b></div>";
+      }).join("");
+      var same = p.w === top[0];
+      card.innerHTML =
+        '<div class="hat-head"><a href="' + esc(p.u) + '" target="_blank" rel="noopener">' + esc(p.n) + "</a>" +
+        '<span class="muted">' + p.k + " links · strength " + p.s + " · " + esc(p.era) + " list</span></div>" +
+        '<div class="hat-toks">' + tokens + "</div>" +
+        '<div class="hat-verdict ' + cls + '" style="--d:' + (R * 55 + 150) + 'ms">' + esc(verdict) + "</div>" +
+        '<div class="hat-bars">' + bars + "</div>" +
+        '<div class="hat-facts"><span><b>With weights:</b> ' + esc(houseName(p.w)) + (same ? " (agrees)" : " (disagrees!)") + "</span>" +
+        "<span><b>Link communities:</b> " + (p.r === 0 ? "in no room of 2+ links" : "lives in " + p.r + (p.r === 1 ? " room" : " rooms")) + "</span></div>";
+      input.value = p.n;
+      try {
+        var q = new URLSearchParams(location.search); q.set("p", p.n);
+        history.replaceState(null, "", "?" + q.toString() + location.hash);
+      } catch (e) {}
+    }
+    function pick(n) {
+      if (n === "random") {
+        var pool = P.map(function (p, i) { return i; }).filter(function (i) { return P[i].k >= 10; });
+        return sort(pool[Math.floor(Math.random() * pool.length)]);
+      }
+      var i = byName[(n || "").trim().toLowerCase()];
+      if (i === undefined) { card.innerHTML = '<p class="muted">Pick a philosopher from the list.</p>'; return; }
+      sort(i);
+    }
+    input.addEventListener("change", function () { pick(input.value); });
+    root.querySelectorAll(".hat-wrap .chip[data-pick]").forEach(function (b) {
+      b.addEventListener("click", function () { pick(b.getAttribute("data-pick")); });
+    });
+    pick(new URLSearchParams(location.search).get("p") || "Charles Darwin");
+
+    /* the hardest cases */
+    var torn = P.map(function (p, i) { return i; }).filter(function (i) { return P[i].k >= 15; })
+      .sort(function (a, b) { return P[b].e - P[a].e; }).slice(0, 12);
+    var board = document.getElementById("tornBoard");
+    board.innerHTML = torn.map(function (i) {
+      var p = P[i];
+      var segs = counts(p).map(function (hc) {
+        return '<span style="flex:' + hc[1] + ";background:" + hcol[hc[0]] + ";color:" + textOn(hcol[hc[0]]) + '" title="' + esc(houseName(hc[0])) + ": " +
+          hc[1] + ' runs">' + (hc[1] >= 3 ? esc(lastName(H[hc[0]].id)) : "") + "</span>";
+      }).join("");
+      return '<button class="torn-row" type="button" data-i="' + i + '"><span class="torn-n">' + esc(p.n) +
+        ' <span class="muted">(' + p.k + ")</span></span><span class=\"torn-bar\">" + segs + "</span></button>";
+    }).join("");
+    board.querySelectorAll(".torn-row").forEach(function (b) {
+      b.addEventListener("click", function () {
+        sort(+b.getAttribute("data-i"));
+        document.querySelector(".hat-wrap").scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+    var shown = H.map(function (h, i) { return i; }).filter(function (i) { return HOUSE_COL[H[i].id]; });
+    document.getElementById("tornLegend").innerHTML = shown.map(function (i) {
+      return '<span><i style="background:' + hcol[i] + '"></i>' + esc(houseName(i)) + "</span>";
+    }).join("") + '<span><i style="background:' + MINOR + '"></i>minor houses</span>';
+
+    /* ---------------- snip the threads ---------------- */
+    var BB = data.bb, NE = BB.length;
+    var cv = document.getElementById("thrCanvas"), ctx = cv.getContext("2d");
+    var slider = document.getElementById("thrSlider"), readout = document.getElementById("thrReadout");
+    var hover = document.getElementById("thrHover"), cardsEl = document.getElementById("thrCards");
+    var AMIN = 0.01, AMAX = 0.3;
+    function alphaOf(v) { return AMIN * Math.pow(AMAX / AMIN, v / 1000); }
+    var labelSet = {};
+    ["Aristotle", "Plato", "Immanuel Kant", "René Descartes", "Thomas Aquinas", "Bertrand Russell", "Avicenna",
+      "The Buddha", "Confucius", "Voltaire", "Karl Marx"].forEach(function (n) { labelSet[byName[n.toLowerCase()]] = true; });
+
+    // group the threads by link: Descartes & Locke hang on the same one
+    var threads = [], tkey = {};
+    data.threads.forEach(function (t) {
+      var k = t.iu + "-" + t.iv;
+      if (!tkey[k]) { tkey[k] = { u: t.u, v: t.v, iu: t.iu, iv: t.iv, alpha: t.alpha, w: t.w, heads: [], pieces: t.pieces }; threads.push(tkey[k]); }
+      tkey[k].heads.push(lastName(t.head));
+    });
+    threads.sort(function (a, b) { return b.alpha - a.alpha; });
+    cardsEl.innerHTML = threads.map(function (t, j) {
+      return '<div class="thr-card" data-j="' + j + '"><b>' + esc(t.u) + " – " + esc(t.v) + "</b>" +
+        "<span>ties " + esc(t.heads.join(" & ")) + " to Aristotle · α* = " + t.alpha.toFixed(3) + "</span></div>";
+    }).join("");
+    var tcards = cardsEl.querySelectorAll(".thr-card");
+
+    var W = 0, Hh = 0, dpr = 1, state = null;
+    function resize() {
+      var w = cv.parentElement.clientWidth;
+      W = cv.clientWidth || w; Hh = Math.round(W * 0.78);
+      dpr = window.devicePixelRatio || 1;
+      cv.width = W * dpr; cv.height = Hh * dpr; cv.style.height = Hh + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw(+slider.value);
+    }
+    function xy(i) { var q = P[i].xy; return q ? [18 + q[0] * (W - 36), 18 + q[1] * (Hh - 36)] : null; }
+    function css(v, f) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || f; }
+
+    function draw(v) {
+      if (!W) return;
+      var a = alphaOf(v), n = 0;
+      while (n < NE && BB[n][2] < a) n++;                    // links are sorted by alpha*
+      var parent = {}, size = {};
+      function find(x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }
+      for (var e = 0; e < n; e++) {
+        var u = BB[e][0], w = BB[e][1];
+        if (parent[u] === undefined) { parent[u] = u; size[u] = 1; }
+        if (parent[w] === undefined) { parent[w] = w; size[w] = 1; }
+        var ru = find(u), rw = find(w);
+        if (ru !== rw) { if (size[ru] < size[rw]) { var t = ru; ru = rw; rw = t; } parent[rw] = ru; size[ru] += size[rw]; }
+      }
+      var att = Object.keys(parent).map(Number), gcRoot = -1, gcSize = 0;
+      att.forEach(function (x) { var r = find(x); if (size[r] > gcSize) { gcSize = size[r]; gcRoot = r; } });
+      state = { att: att.filter(function (i) { return P[i].xy; }), find: find, gc: gcRoot };
+
+      var ink = css("--ink", "#16130f"), muted = css("--muted", "#6a6357"), panel = css("--panel", "#fff");
+      ctx.clearRect(0, 0, W, Hh);
+      ctx.globalAlpha = 0.18; ctx.strokeStyle = muted; ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      for (e = 0; e < n; e++) {
+        var p1 = xy(BB[e][0]), p2 = xy(BB[e][1]);
+        if (p1 && p2) { ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); }
+      }
+      ctx.stroke(); ctx.globalAlpha = 1;
+      threads.forEach(function (t) {                            // the threads: solid when holding, dashed when cut
+        var p1 = xy(t.iu), p2 = xy(t.iv), on = t.alpha < a;
+        ctx.strokeStyle = on ? "#e62429" : muted; ctx.lineWidth = on ? 3 : 1.5;
+        ctx.setLineDash(on ? [] : [4, 4]); ctx.globalAlpha = on ? 1 : 0.7;
+        ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.stroke();
+      });
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+      var drawn = att.filter(function (i) { return P[i].xy; });   // small pieces at alpha 0.3 have no position
+      drawn.sort(function (x, y) { return P[x].s - P[y].s; });
+      drawn.forEach(function (i) {
+        var q = xy(i), inGc = find(i) === gcRoot;
+        ctx.beginPath(); ctx.arc(q[0], q[1], 1.6 + Math.sqrt(P[i].s) / 3.2, 0, 2 * Math.PI);
+        ctx.fillStyle = inGc ? hcol[modal[i]] : muted;
+        ctx.globalAlpha = inGc ? 1 : 0.45; ctx.fill();
+        ctx.globalAlpha = 1; ctx.lineWidth = 0.7; ctx.strokeStyle = ink; if (P[i].s > 60) ctx.stroke();
+      });
+      ctx.font = "700 11px Barlow, sans-serif"; ctx.lineWidth = 3; ctx.strokeStyle = panel; ctx.fillStyle = ink;
+      drawn.forEach(function (i) {
+        if (!labelSet[i]) return;
+        var q = xy(i), txt = lastName(P[i].n);
+        ctx.strokeText(txt, q[0] + 7, q[1] + 4); ctx.fillText(txt, q[0] + 7, q[1] + 4);
+      });
+      readout.innerHTML = '<div><span class="muted">α</span><b>' + a.toFixed(3) + "</b></div>" +
+        '<div><span class="muted">links kept</span><b>' + n.toLocaleString("en-US") + "</b></div>" +
+        '<div><span class="muted">philosophers attached</span><b>' + att.length.toLocaleString("en-US") + "</b></div>" +
+        '<div><span class="muted">biggest piece</span><b>' + gcSize.toLocaleString("en-US") + "</b></div>";
+      tcards.forEach(function (c) {
+        var t = threads[+c.getAttribute("data-j")];
+        c.classList.toggle("cut", t.alpha >= a);
+      });
+    }
+    slider.addEventListener("input", function () { draw(+slider.value); });
+    var timer = null, play = document.getElementById("thrPlay");
+    play.addEventListener("click", function () {
+      if (timer) { clearInterval(timer); timer = null; play.textContent = "✂ snip"; return; }
+      if (+slider.value <= 0) slider.value = 1000;
+      play.textContent = "❚❚ pause";
+      timer = setInterval(function () {
+        var v = +slider.value - 6; slider.value = Math.max(0, v); draw(+slider.value);
+        if (v <= 0) { clearInterval(timer); timer = null; play.textContent = "✂ snip"; }
+      }, 40);
+    });
+    cv.addEventListener("mousemove", function (ev) {
+      if (!state) return;
+      var b = cv.getBoundingClientRect(), mx = ev.clientX - b.left, my = ev.clientY - b.top, best = -1, bd = 100;
+      state.att.forEach(function (i) {
+        var q = xy(i), d = (q[0] - mx) * (q[0] - mx) + (q[1] - my) * (q[1] - my);
+        if (d < bd) { bd = d; best = i; }
+      });
+      hover.innerHTML = best < 0 ? "Hover a dot to see who it is." :
+        "<b>" + esc(P[best].n) + "</b> · " + esc(houseName(modal[best])) + " · " + P[best].k + " links" +
+        (state.find(best) === state.gc ? "" : " · <em>drifted off the main piece</em>");
+    });
+    var qa = parseFloat(new URLSearchParams(location.search).get("a"));   // shareable: ?a=0.1
+    if (qa >= AMIN && qa <= AMAX) slider.value = Math.round(1000 * Math.log(qa / AMIN) / Math.log(AMAX / AMIN));
+    window.addEventListener("resize", function () { resize(); });
+    document.addEventListener("themechange", function () { draw(+slider.value); });
+    resize();
+
+    /* ---------------- Aristotle's rooms ---------------- */
+    var AR = data.aristotle, rooms = AR.rooms;
+    var ROOM_COL = ["#e62429", "#1a6dff", "#16b364", "#ff7a1a", "#8b5cf6", "#00b8d9", "#ff5fa2"];
+    var real = rooms.filter(function (r) { return r.links >= 2; }), loose = rooms.filter(function (r) { return r.links < 2; });
+    var TOPN = 7;
+    var groups = real.slice(0, TOPN).map(function (r, j) { return { rooms: [r], col: ROOM_COL[j], key: "r" + j }; });
+    groups.push({ rooms: real.slice(TOPN), col: "#8a8578", key: "small" });
+    groups.push({ rooms: loose, col: "#cfc9bb", key: "loose" });
+    var svg = document.getElementById("arChart"), cx = 280, cy = 280, R0 = 60, R1 = 235;
+    var total = AR.k, gap = 0.035, spokes = [];
+    var usable = 2 * Math.PI - gap * groups.length, ang = -Math.PI / 2;
+    groups.forEach(function (g, gi) {
+      g.n = g.rooms.reduce(function (s, r) { return s + r.n; }, 0);
+      g.a0 = ang;
+      g.rooms.forEach(function (r) {
+        r.nbrs.forEach(function (j) {
+          var t = ang + usable / total / 2;
+          var len = R1 - 40 + Math.min(40, Math.sqrt(P[j].k) * 3);
+          var x = cx + len * Math.cos(t), y = cy + len * Math.sin(t);
+          var ln = el("line", { x1: cx + R0 * Math.cos(t), y1: cy + R0 * Math.sin(t), x2: x, y2: y, stroke: g.col }, svg);
+          var dot = el("circle", { cx: x, cy: y, r: 2 + Math.sqrt(P[j].k) / 4, fill: g.col }, svg);
+          var tt = el("title", {}, dot); tt.textContent = P[j].n;
+          spokes.push({ g: gi, ln: ln, dot: dot });
+          ang += usable / total;
+        });
+      });
+      g.a1 = ang; ang += gap;
+      if (gi < TOPN) {
+        var mid = (g.a0 + g.a1) / 2, lr = R1 + 12;
+        var tx = el("text", { x: cx + lr * Math.cos(mid), y: cy + lr * Math.sin(mid) + 4, "text-anchor": "middle", "class": "ar-num" }, svg);
+        tx.textContent = gi + 1;
+      }
+    });
+    el("circle", { cx: cx, cy: cy, r: R0 - 6, "class": "ar-center" }, svg);
+    var ct = el("text", { x: cx, y: cy + 5, "text-anchor": "middle", "class": "ar-center-t" }, svg);
+    ct.textContent = "Aristotle";
+
+    function roomLabel(r) { return r.top.filter(function (n) { return n !== "Plato"; }).slice(0, 3).join(", "); }
+    var btns = document.getElementById("arRooms"), note = document.getElementById("arNote");
+    btns.innerHTML = groups.map(function (g, gi) {
+      var lab = gi < TOPN ? "<b>" + (gi + 1) + ".</b> " + esc(roomLabel(g.rooms[0])) :
+        g.key === "small" ? "<b>" + g.rooms.length + " small rooms</b>" : "<b>" + g.rooms.length + " loose links</b>";
+      return '<button class="ar-btn" type="button" data-g="' + gi + '"><i style="background:' + g.col + '"></i><span>' + lab +
+        '</span><em>' + g.n + "</em></button>";
+    }).join("");
+    function showGroup(gi) {
+      spokes.forEach(function (s) {
+        var dim = gi !== null && s.g !== gi;
+        s.ln.classList.toggle("dim", dim); s.dot.classList.toggle("dim", dim);
+      });
+      btns.querySelectorAll(".ar-btn").forEach(function (b) { b.classList.toggle("on", +b.getAttribute("data-g") === gi); });
+      if (gi === null) { note.textContent = "Each spoke is one of Aristotle's links, grouped by room."; return; }
+      var g = groups[gi];
+      if (gi < TOPN) {
+        var r = g.rooms[0];
+        note.innerHTML = "<b>" + r.n + " of his " + AR.k + " links</b> sit in this room: " + r.size + " philosophers, " + r.links +
+          " links. With: " + esc(r.top.join(", ")) + ". Their usual houses: " +
+          esc(r.houses.map(function (h) { return lastName(h[0]) + " " + h[1]; }).join(", ")) + ".";
+      } else if (g.key === "small") {
+        note.innerHTML = "<b>" + g.n + " links</b> in " + g.rooms.length + " small rooms of 2–" +
+          Math.max.apply(null, g.rooms.map(function (r) { return r.size; })) + " philosophers each, most of them with Plato too.";
+      } else {
+        note.innerHTML = "<b>" + g.n + " links</b> that didn't cluster with anything: a room of one link each. " +
+          "The sparse edge of the network, where link communities struggle.";
+      }
+    }
+    btns.querySelectorAll(".ar-btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var gi = +b.getAttribute("data-g");
+        showGroup(b.classList.contains("on") ? null : gi);
+      });
+    });
+    showGroup(null);
+  }).catch(function (err) {
+    var c = document.getElementById("hatCard");
+    if (c) c.innerHTML = '<p class="muted">Could not load week4.json (' + err + ").</p>";
+  });
+})();

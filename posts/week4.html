@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 4 — The Sorting Hat can't place Darwin</title>
+<meta name="description" content="Week 4 of DTU 02805: 20 Louvain runs sort 1,374 philosophers into houses, the backbone shows the single links that hold whole traditions on, and Aristotle turns out to live in 47 rooms at once.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="bolt">⚡</span>Marvel Social Graphs</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="week1.html">Week&nbsp;1</a>
+      <a href="week2.html">Week&nbsp;2</a>
+      <a href="week3.html">Week&nbsp;3</a>
+      <a href="week4.html" class="active">Week&nbsp;4</a>
+      <a href="https://sunelehmann.com/socialgraphs2026-web/" target="_blank" rel="noopener">Course</a>
+      <button id="themeToggle" type="button">☾</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="w4" data-src="../assets/week4.json">
+
+  <section class="hero reveal">
+    <span class="kicker">Week 4 · communities, overlap, weights, backbones</span>
+    <h1>The Sorting Hat<br><span class="mark">can't place Darwin.</span></h1>
+    <p class="post-meta">By <span class="tag">Ívar</span> <span class="tag">Gunnlaugur</span> <span class="tag">Víðir</span>
+    &nbsp;·&nbsp; This week the heroes take a break. We sorted 1,374 philosophers into houses twenty times over,
+    snipped the threads that hold philosophy together, and asked which tradition Aristotle is <em>really</em> in.</p>
+  </section>
+
+  <section class="reveal">
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="1374">0</div><div class="label">philosophers born before 1900</div></div>
+      <div class="stat"><div class="num" data-count="20">0</div><div class="label">times we let the hat decide</div></div>
+      <div class="stat"><div class="num" data-count="8">0</div><div class="label">times Plato leaves Aristotle</div></div>
+      <div class="stat"><div class="num" data-count="1">0</div><div class="label">link tying Confucius to the West</div></div>
+    </div>
+  </section>
+
+  <!-- ================= THE SORTING HAT ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Meet the Sorting Hat</span></h2>
+    <p class="reveal">The network: every philosopher on Wikipedia's lists of philosophers born before 1900, with a
+    link wherever one article links to another. Its giant component has 1,374 philosophers and 9,139 links.
+    Our Sorting Hat is the <strong>Louvain</strong> algorithm. It sorts everyone into the groups that maximise
+    modularity: groups with far more links inside them than you'd expect by chance.</p>
+    <p class="reveal">It works. Louvain finds 8–10 houses with <strong>Q&nbsp;≈&nbsp;0.50</strong>. We shuffled the
+    network ten times, keeping everyone's number of links, and Louvain on the shuffles only reaches
+    <strong><span data-f="Qnull">0.22</span></strong>. The houses are real. But the hat is a
+    <em>randomised</em> algorithm: it visits the philosophers in a random order, and a different order can give
+    a different answer. So we put everyone under the hat <strong>20 times</strong>. Each house is named after
+    its most-linked member. Pick a philosopher and watch the hat make up its mind (or not):</p>
+  </section>
+
+  <div class="hat-wrap reveal">
+    <div class="sc-controls">
+      <label>philosopher <input id="hatInput" type="text" list="hatList" placeholder="type a name…" autocomplete="off"></label>
+      <datalist id="hatList"></datalist>
+    </div>
+    <div class="sc-controls">
+      <button class="chip" data-pick="Charles Darwin" type="button">Darwin</button>
+      <button class="chip" data-pick="Galileo Galilei" type="button">Galileo</button>
+      <button class="chip" data-pick="Plato" type="button">Plato</button>
+      <button class="chip" data-pick="Baruch Spinoza" type="button">Spinoza</button>
+      <button class="chip" data-pick="Friedrich Nietzsche" type="button">Nietzsche</button>
+      <button class="chip" data-pick="Mao Zedong" type="button">Mao</button>
+      <span class="sc-sep"></span>
+      <button class="chip" data-pick="random" type="button">🎲 random philosopher</button>
+    </div>
+    <div id="hatCard" class="hat-card"><p class="muted">Loading the hat…</p></div>
+  </div>
+
+  <section class="narrow">
+    <p class="reveal"><strong>Most philosophers are easy.</strong> Nietzsche is in House Kant 20 times out of 20,
+    and Confucius heads his own house in 19 runs. The Buddha, Kant and Aristotle head a house in every single run.
+    <strong>Plato is the surprise:</strong> in 8 of the 20 runs he leaves Aristotle and heads his own house.
+    Teacher and student really are that hard to tell apart.</p>
+    <h3 class="reveal">The hat's hardest cases</h3>
+    <p class="reveal">These are the philosophers (with 15+ links) whose 20 sortings disagree the most. Each bar is
+    their 20 runs, coloured by house. Click one to put them under the hat:</p>
+  </section>
+
+  <div class="torn-wrap reveal">
+    <div id="tornBoard"></div>
+    <div id="tornLegend" class="torn-legend"></div>
+  </div>
+
+  <section class="narrow">
+    <p class="reveal">The hardest cases aren't random. They're <strong>the Victorian science crowd</strong> and its fellow travellers:
+    Darwin, Herbert Spencer, T. H. Huxley, Auguste Comte, George Eliot and Emerson. These are the people who
+    brought evolution and positivism into philosophy. Their articles link evenly to the empiricists (House Locke),
+    the Germans (House Kant), the scientists (House Descartes) and the 1900 generation (House Russell), so no
+    single house can claim them. <strong>Darwin lands in six different houses in 20 runs.</strong> That's not
+    the hat failing. It's the hat telling you that "which school was Darwin in?" is a bad question.</p>
+    <p class="reveal">One number to keep us honest: two runs of the hat agree at a normalised mutual information of
+    only <span data-f="nmi">0.60–0.83</span>. The borders move, even though the houses themselves are real.
+    Using the link weights (how many times one article links another) gives a similar score
+    (weighted Q <span data-f="Qw">0.55</span>), but agrees with the unweighted sorting at only
+    NMI&nbsp;<span data-f="nmiW">0.64</span>. That's why each card above also shows the weighted verdict.</p>
+  </section>
+
+  <!-- ================= THE THREADS ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Snip the threads of philosophy</span></h2>
+    <p class="reveal">Drawn in full, the network is a hairball. To see its skeleton we used the
+    <strong>disparity filter</strong>. It keeps a link only if it carries a surprisingly large share of the links
+    of at least one of its two philosophers. The knob is <strong>α</strong>. At α&nbsp;=&nbsp;0.3 the backbone
+    keeps 2,549 links (28%) and almost everyone is still in one piece. Lower α and only the most important
+    ties survive.</p>
+    <p class="reveal">Drag the slider down (or press <em>snip</em>) and watch philosophy come apart. We
+    tracked the exact link that holds each tradition on to antiquity: when it goes, the whole tradition
+    drifts off.</p>
+  </section>
+
+  <div class="thr-wrap reveal">
+    <div class="thr-top">
+      <canvas id="thrCanvas" aria-label="The backbone of the philosophers network at the chosen alpha"></canvas>
+      <div class="thr-side">
+        <div class="thr-controls">
+          <button class="chip" id="thrPlay" type="button">✂ snip</button>
+          <input id="thrSlider" type="range" min="0" max="1000" value="1000" aria-label="alpha">
+        </div>
+        <div id="thrReadout" class="thr-readout"></div>
+        <div id="thrHover" class="thr-hover muted">Hover a dot to see who it is.</div>
+        <div id="thrCards" class="thr-cards"></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="narrow">
+    <p class="reveal">The threads read like a history lecture:</p>
+    <ul class="reveal thr-list">
+      <li><strong>Confucius–Voltaire</strong> is the last thread tying Chinese philosophy (22 philosophers still
+      hanging together at that point) to the West. It goes at α&nbsp;=&nbsp;0.17. Voltaire was the Enlightenment's
+      great Confucius fan, and he held up Confucian ethics as morality without revealed religion.</li>
+      <li><strong>B. R. Ambedkar–the Buddha</strong> is the Buddha's last thread (α&nbsp;=&nbsp;0.16). Ambedkar,
+      the Columbia-trained architect of India's constitution, converted to Buddhism in 1956 together with hundreds
+      of thousands of followers.</li>
+      <li><strong>Russell–Hegel</strong> ties Russell's circle to everyone else (α&nbsp;=&nbsp;0.058). Russell
+      started out a Hegelian and made his name rebelling against it.</li>
+      <li><strong>Hume–Rousseau</strong> holds on the 117-philosopher piece with Kant, Hegel and Marx
+      (α&nbsp;=&nbsp;0.052). It's the Enlightenment's most famous <em>quarrel</em>: Hume sheltered Rousseau in
+      England in 1766, and they fell out in public within months.</li>
+      <li><strong>Augustine–Malebranche</strong> is the last thread between the moderns and antiquity
+      (α&nbsp;=&nbsp;0.047). Malebranche spent his life fusing Augustine with Descartes. Below this α, the ancient
+      and medieval piece (68 philosophers) and the modern piece (40) are two separate networks.</li>
+    </ul>
+    <p class="reveal">So when the backbone "breaks", it breaks along real history. The things holding
+    philosophy together are a fan, a convert, a rebellion, a quarrel and a synthesis, not the famous hubs.</p>
+  </section>
+
+  <!-- ================= ARISTOTLE ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Which house is Aristotle really in?</span></h2>
+    <p class="reveal">The hat says House Aristotle, 20 times out of 20. Obviously: he's the most-linked philosopher,
+    so every house he's in gets named after him. That's the problem with sorting. Every philosopher gets exactly one
+    house, and Aristotle is cited by <em>everyone</em>.</p>
+    <p class="reveal">So we tried the other way round and sorted his <strong>links</strong> instead of him.
+    <strong>Link communities</strong> group links whose endpoints have similar neighbourhoods, and a philosopher
+    then belongs to every group their links end up in. Aristotle's 300 links fall into
+    <strong>47 rooms</strong> (plus 59 loose single links). Click a room:</p>
+  </section>
+
+  <div class="ar-wrap reveal">
+    <svg id="arChart" viewBox="0 0 560 560" role="img" aria-label="Aristotle's 300 links grouped by link community"></svg>
+    <div class="ar-side">
+      <div id="arRooms" class="ar-rooms"></div>
+      <div id="arNote" class="ar-note muted">Each spoke is one of Aristotle's links, grouped by room.</div>
+    </div>
+  </div>
+
+  <section class="narrow">
+    <p class="reveal"><strong>The answer: Aristotle isn't in a tradition. Traditions are in Aristotle.</strong>
+    Just over half his links (158) are in one big room: everyone who cites Plato and Aristotle together. Of that
+    room's 200 other members, 141 usually sort into House Aristotle; 38 are Christian thinkers (House
+    Aquinas) and 20 are Islamic philosophers (House Avicenna). The other rooms
+    are small and specific: the Franciscans, the Paris masters around the Condemnation of 1277, the Salamanca school,
+    the Russian religious philosophers, the Victorian British scholars. And Plato is in almost every one of them.</p>
+  </section>
+
+  <!-- ================= SURPRISED ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">What surprised us</span></h2>
+    <blockquote class="reveal">
+      <strong>The hubs don't hold philosophy together.</strong> Aristotle, Kant and Plato have hundreds of links, but
+      their links stay inside their own traditions. Philosophy's traditions hang together by single links at
+      unglamorous places: Voltaire's fondness for Confucius, a convert in 1950s India, and a quarrel in 1766.
+      Remove them and the Western canon, India and China come apart. The hubs sort the network into houses,
+      but the bridges between houses are held up by go-betweens.
+    </blockquote>
+  </section>
+
+  <hr>
+  <p class="reveal muted">Data: the course's frozen philosophers snapshot (15 Sept 2026). Louvain runs are
+  unweighted, seeds 0–19. The link communities follow Ahn, Bagrow &amp; Lehmann (2010), cut at maximum partition
+  density. The disparity filter follows Serrano, Boguñá &amp; Vespignani (2009); a link's α is the smaller of its
+  two p-values, and the slider keeps every link with p&nbsp;&lt;&nbsp;α. We implemented all three ourselves
+  (no packages) and checked them against the course's numbers. Reproduce with
+  <code>cd analysis &amp;&amp; python3 week4_post.py</code> (writes <code>assets/week4.json</code>); the full
+  working is in our Week 4 notebook.</p>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    Built with an LLM for DTU 02805 · data © Wikipedia contributors (CC BY-SA) ·
+    <a href="https://sunelehmann.com/socialgraphs2026-web/weeks/week4.html" target="_blank" rel="noopener">week 4 brief</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js" defer></script>
+</body>
+</html>
