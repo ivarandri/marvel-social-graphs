@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 5 — Everybody fights the Hulk</title>
+<meta name="description" content="Week 5 of DTU 02805: we read the sentence behind every Marvel link, turned links into friends, foes and family, hand-checked 120 of our own labels, and asked whether enemies live in other communities.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="bolt">⚡</span>Marvel Social Graphs</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="week1.html">Week&nbsp;1</a>
+      <a href="week2.html">Week&nbsp;2</a>
+      <a href="week3.html">Week&nbsp;3</a>
+      <a href="week4.html">Week&nbsp;4</a>
+      <a href="week5.html" class="active">Week&nbsp;5</a>
+      <a href="https://sunelehmann.com/socialgraphs2026-web/" target="_blank" rel="noopener">Course</a>
+      <button id="themeToggle" type="button">☾</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="w5" data-src="../assets/week5.json">
+
+  <section class="hero reveal">
+    <span class="kicker">Week 5 · the network gets language</span>
+    <h1>Everybody fights<br><span class="mark">the Hulk.</span></h1>
+    <p class="post-meta">By <span class="tag">Ívar</span> <span class="tag">Gunnlaugur</span> <span class="tag">Víðir</span>
+    &nbsp;·&nbsp; For four weeks a Marvel link just meant "A's page links to B". This week we read the sentence behind
+    every link and asked: <strong>is B a friend, a foe or family?</strong> And do enemies live in other parts of the network than friends do?</p>
+  </section>
+
+  <section class="reveal">
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="1464">0</div><div class="label">links matched to a sentence</div></div>
+      <div class="stat"><div class="num" data-count="120">0</div><div class="label">of our own labels read by hand</div></div>
+      <div class="stat"><div class="num" data-count="73">0</div><div class="label">% of them right (second try)</div></div>
+      <div class="stat"><div class="num" data-count="18">0</div><div class="label">characters who fight the Hulk</div></div>
+    </div>
+  </section>
+
+  <!-- ================= METHOD ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">From links to relationships</span></h2>
+    <p class="reveal">For each of the 1,784 links A → B, we searched the story part of A's Wikipedia page (we stop at
+    <em>In other media</em> and <em>Reception</em>, where the sentences are about films and critics) for sentences
+    that mention B. That works for <strong>1,464 links</strong>. The other 320 only link B from a part we cut, or
+    call B by a different name (Psylocke for Betsy Braddock, say).</p>
+    <p class="reveal">Then a small word list labels every sentence by the words <em>near</em> B's name:</p>
+    <div class="wl reveal">
+      <div class="wl-col foe"><b>Foe</b> enemy · nemesis · rival · fought · battled · defeated · killed · attacked · captured · betrayed · kidnapped …</div>
+      <div class="wl-col ally"><b>Ally</b> ally · teammate · teamed up · partner · friend · mentor · alongside · helped · rescued · joined · trained …</div>
+      <div class="wl-col fam"><b>Family</b> married · wife · husband · son · daughter · father · mother · brother · sister · cousin · love interest …</div>
+    </div>
+    <p class="reveal">A link gets the label with the most hits (ties are <em>mixed</em>; no hits is <em>neutral</em>).
+    The result: <strong>384 ally links, 194 foe links and 72 family links</strong> inside the main network, plus
+    666 neutral ones ("appears in the same issue as") that our words can't type.</p>
+  </section>
+
+  <!-- ================= FEUD MAP ================= -->
+  <h2 class="reveal"><span class="mark">The feud map</span></h2>
+  <p class="reveal narrow">Every character in the big connected piece, coloured by their week-4-style Louvain community.
+  Lines are the typed links. Switch the types on and off, and <strong>click any character</strong> to read the sentences
+  behind their links on the right.</p>
+
+  <div class="fm-wrap reveal">
+    <div class="fm-main">
+      <div class="fm-toggles">
+        <button class="chip on" data-type="foe" type="button"><i class="sw foe"></i>foes</button>
+        <button class="chip on" data-type="ally" type="button"><i class="sw ally"></i>allies</button>
+        <button class="chip on" data-type="family" type="button"><i class="sw family"></i>family</button>
+        <button class="chip" data-type="other" type="button"><i class="sw other"></i>everything else</button>
+      </div>
+      <svg id="fmMap" viewBox="0 0 1000 760" role="img" aria-label="The Marvel network with links coloured by relationship type"></svg>
+      <div id="fmLegend" class="fm-legend"></div>
+    </div>
+    <div class="fm-side">
+      <div class="sc-controls">
+        <label>character <input id="fmInput" type="text" list="fmList" placeholder="type a name…" autocomplete="off"></label>
+        <datalist id="fmList"></datalist>
+      </div>
+      <div class="sc-controls">
+        <button class="chip" data-pick="Hulk" type="button">Hulk</button>
+        <button class="chip" data-pick="Spider-Man" type="button">Spider-Man</button>
+        <button class="chip" data-pick="Cyclops" type="button">Cyclops</button>
+        <button class="chip" data-pick="Black Widow" type="button">Black Widow</button>
+        <button class="chip" data-pick="random" type="button">🎲</button>
+      </div>
+      <div id="fmCard" class="fm-card"><p class="muted">Loading…</p></div>
+    </div>
+  </div>
+
+  <!-- ================= THE QUESTION ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Do enemies live next door?</span></h2>
+    <p class="reveal">Our guess was that foes would come from <em>other</em> corners of the universe: the X-Men fight cosmic
+    villains, the street-level heroes fight mobsters. If so, foe links should cross community borders more often than
+    ally links do. Here is the share of each type that crosses a border, against the same share when we shuffle the
+    labels among the typed links 5,000 times:</p>
+    <div class="cx-bars reveal" id="cxBars"></div>
+    <p class="reveal"><strong>Foes do cross a little more: 40% against 34% for allies and 32% for family.</strong>
+    But shuffled labels give 36% ± 3%, so the foe gap is a z-score of only 1.35 (p ≈ 0.10). That's suggestive, not a
+    finding. And it says something about the communities themselves: Louvain didn't find "heroes" and "villains".
+    It found <em>story worlds</em>: Spider-Man's New York, the X-Men's school, the Hulk's gamma corner. Story worlds
+    contain both your best friend and your worst enemy. <strong>Most Marvel feuds are local.</strong></p>
+    <p class="reveal muted">One caveat makes this cautious: about 1 in 4 labels is wrong (see below). Random mislabelling
+    pulls the three bars towards each other, so the true gap could be somewhat bigger than the one we measure.</p>
+  </section>
+
+  <!-- ================= HULK ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Everybody fights the Hulk</span></h2>
+    <p class="reveal">Count how often each character is named as somebody's foe, versus as somebody's ally (8+ typed
+    mentions). Spider-Man is named most in both lists, because he's everywhere. But the <em>share</em> of foe tells a
+    different story:</p>
+    <div class="hb-board reveal" id="hbBoard"></div>
+    <p class="reveal"><strong>Two thirds of the Hulk's typed mentions are fights: 18 foe against 9 ally.</strong> We read all 18
+    and they're nearly all real. The Gargoyle is "the first enemy of the Hulk", Firebird "mistakenly battled the Hulk",
+    Sabra's "first public act … is a battle with the Hulk", Rockslide is "one of the students who battle the Hulk when he
+    attacks the institute", and Ghost Rider "decides to go to New York and fight the Hulk". Only two are wrong: Doctor Druid
+    actually "teams with the Hulk against the Maha Yogi", and Doctor Strange is killed by Dormammu, not by the Hulk. At the
+    other end, Nova (0 foe, 8 ally), Storm and Iron Fist are almost only ever named as teammates.</p>
+  </section>
+
+  <!-- ================= VALIDATION ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">We read 120 of our own labels</span></h2>
+    <p class="reveal">A word list is a guess. So we drew 60 random labelled links, read each sentence, and wrote down what the
+    relationship really was. <strong>The first version was only 60% right.</strong> Allies were fine (21 of 23), but foes
+    were a coin toss (14 of 28) and family was a disaster (1 of 9). Three failures explained most of it:</p>
+    <div class="fail reveal">
+      <div class="fail-card"><b>The Black Widow problem</b><span>"…the characters of Little Women (<u>Black Widow</u>, She-Hulk, Elektra)…"
+      was labelled <em>family</em> because of the word <em>widow</em>. Four of the eight bad family labels came from
+      names: Black Widow, Green Widow, "Black Widow's clone".</span></div>
+      <div class="fail-card"><b>The team-up problem</b><span>"…a team composed of Ghost Rider, Werewolf by Night, Gargoyle, Black Cat and <u>Satana</u>,
+      to <em>fight</em> a mystically powered Jack O'Lantern." Satana is a <em>teammate</em>, but <em>fight</em> was 12 words away and counted.</span></div>
+      <div class="fail-card"><b>Somebody else's family</b><span>"Hawkeye believes he is retrieving his presumed-dead <em>wife</em>, the <u>Mockingbird</u>" sits on
+      Patsy Walker's page. A word list labels the sentence, not the pair.</span></div>
+    </div>
+    <p class="reveal">So we fixed what we could. Every <em>other</em> character's name is masked before matching (no more Black
+    Widows). A foe word has to come just <em>before</em> the name ("battled the Hulk", "killed by Blade"). A family word
+    has to be within three words. Links between two versions of the same character (Wolverine → Ultimate Wolverine) get
+    their own label. Then we drew <strong>60 fresh links</strong> that we hadn't tuned on:</p>
+    <div class="val reveal" id="valTable"></div>
+    <p class="reveal"><strong>73% right on the fresh sample.</strong> Foes improved to 2 in 3, and allies are about 4 in 5.
+    Family is still only half right, and it's rare: just 73 links. Treat the family colour on the map as "a relative is
+    mentioned nearby".</p>
+  </section>
+
+  <!-- ================= FRENEMIES ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Frenemies (we checked)</span></h2>
+    <p class="reveal">Five pairs have a foe link one way and an ally link the other. We read all ten sentences, and only two
+    pairs are real frenemies:</p>
+    <div class="fr-list reveal" id="frList"></div>
+    <p class="reveal">The other three are artefacts. In two of them the foe sentence is about somebody <em>else's</em> fight:
+    Mania's page describes "the Venom symbiote's fight with Wolverine", and Star-Lord's page reports that Rocket is
+    killed in a battle against a third party. In the third, the foe side is real (the Iron Man of 2020 was hired "to destroy
+    Machine Man"), but the "ally" sentence is about Machine Man joining the A.I. Army "during the <em>Iron Man 2020</em>
+    storyline": a comic title, not the character. An honest frenemy count from our data is <strong>two</strong>, not five.</p>
+  </section>
+
+  <!-- ================= SURPRISED ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">What surprised us</span></h2>
+    <blockquote class="reveal">
+      <strong>The communities aren't teams, they're neighbourhoods.</strong> We expected Louvain's groups from the link
+      network to be "sides", with enemies across the border. Instead, foe links stay inside a community almost as often as
+      ally links do. A Marvel community is a story world, and in a story world the hero and their nemesis share most of
+      their pages. <strong>The second surprise was ourselves:</strong> our first word list called Black Widow a relative of
+      half the universe, and we'd never have noticed without reading the sentences.
+    </blockquote>
+    <p class="reveal"><strong>Limitation.</strong> We label a sentence, not a relationship. "X teamed up with B against Y"
+    and "B's son was killed" both put relationship words next to B's name, even when the relationship is with somebody else.
+    Our hand checks put the error rate at about one in four. Telling who did what to whom needs the grammar of the
+    sentence (subject, verb, object), not just which words are nearby.</p>
+  </section>
+
+  <hr>
+  <p class="reveal muted">Data: the frozen week-1 Marvel network and the week-5 page texts (<code>marvel_pages.zip</code>).
+  Communities: Louvain (seed 0) on the undirected giant component. Reproduce with <code>cd analysis &amp;&amp; python3 week5_post.py</code>
+  (writes <code>assets/week5.json</code>). Our two rounds of hand-read labels are in
+  <code>analysis/validation_round1.tsv</code> and <code>validation_round2.tsv</code>.</p>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    Built with an LLM for DTU 02805 · data © Wikipedia contributors (CC BY-SA) ·
+    <a href="https://sunelehmann.com/socialgraphs2026-web/weeks/week5.html" target="_blank" rel="noopener">week 5 brief</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

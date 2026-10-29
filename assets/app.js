@@ -1046,3 +1046,211 @@
     if (c) c.innerHTML = '<p class="muted">Could not load week4.json (' + err + ").</p>";
   });
 })();
+
+/* ============================================================
+   Week 5 — friends, foes and family: the feud map, receipts,
+   community-crossing bars, the Hulk board, validation, frenemies
+   (own IIFE, no D3)
+   ============================================================ */
+(function () {
+  "use strict";
+  var root = document.getElementById("w5");
+  if (!root) return;
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  var TYPE_COL = { foe: "#e62429", ally: "#1a6dff", family: "#d6339a" };
+  var COMM_COL = ["#ffb3b3", "#b9d3ff", "#ffe08a", "#d9c2ff", "#a8e6c8", "#ffcfa1", "#c8f08f", "#9fe3f0"];
+  var TYPED = { foe: 1, ally: 1, family: 1 };
+
+  fetch(root.getAttribute("data-src")).then(function (r) { return r.json(); }).then(function (data) {
+    var C = data.chars, E = data.edges, S = data.stats;
+    var byName = {};
+    C.forEach(function (c, i) { byName[c.n.toLowerCase()] = i; });
+    var out = C.map(function () { return []; }), inn = C.map(function () { return []; });
+    E.forEach(function (e, j) { out[e[0]].push(j); inn[e[1]].push(j); });
+
+    /* ---------------- the feud map ---------------- */
+    var svg = document.getElementById("fmMap"), W = 1000, H = 760, pad = 24;
+    function X(i) { return pad + C[i].xy[0] * (W - 2 * pad); }
+    function Y(i) { return pad + C[i].xy[1] * (H - 2 * pad); }
+    var gE = el("g", { "class": "fm-edges" }, svg), gN = el("g", { "class": "fm-nodes" }, svg), gL = el("g", { "class": "fm-labels" }, svg);
+    var lines = [];
+    E.forEach(function (e, j) {
+      if (!C[e[0]].xy || !C[e[1]].xy || e[0] === e[1]) return;
+      var t = TYPED[e[2]] ? e[2] : "other";
+      var ln = el("line", { x1: X(e[0]), y1: Y(e[0]), x2: X(e[1]), y2: Y(e[1]), "class": "t-" + t }, gE);
+      if (TYPED[t]) ln.setAttribute("stroke", TYPE_COL[t]);
+      lines.push({ ln: ln, t: t, a: e[0], b: e[1] });
+    });
+    var circles = {};
+    C.forEach(function (c, i) {
+      if (!c.xy) return;
+      var r = 2.5 + Math.sqrt(c.k) * 0.9;
+      var ci = el("circle", { cx: X(i), cy: Y(i), r: r, fill: COMM_COL[c.c] || "#ccc" }, gN);
+      var tt = el("title", {}, ci); tt.textContent = c.n;
+      ci.addEventListener("click", function () { pick(i); });
+      circles[i] = ci;
+    });
+    // name each community cluster, just outside it
+    data.comms.forEach(function (cm, ci) {
+      var mem = C.map(function (c, i) { return i; }).filter(function (i) { return C[i].c === ci && C[i].xy; });
+      var mx_ = mem.reduce(function (s, i) { return s + X(i); }, 0) / mem.length;
+      var my_ = mem.reduce(function (s, i) { return s + Y(i); }, 0) / mem.length;
+      var dx = mx_ - W / 2, dy = my_ - H / 2, d = Math.sqrt(dx * dx + dy * dy) || 1;
+      var lx = Math.max(95, Math.min(W - 95, mx_ + dx / d * 125)), ly = Math.max(28, Math.min(H - 14, my_ + dy / d * 105 + 8));
+      var t = el("text", { x: lx, y: ly, "text-anchor": "middle", "class": "cl" }, gL);
+      t.textContent = cm.name.replace("Cloak and Dagger", "Cloak & Dagger");
+    });
+    // label the biggest characters
+    C.map(function (c, i) { return i; }).filter(function (i) { return C[i].xy && C[i].k >= 35; }).forEach(function (i) {
+      var t = el("text", { x: X(i) + 9, y: Y(i) + 6 }, gL); t.textContent = C[i].n;
+    });
+    var show = { foe: true, ally: true, family: true, other: false };
+    function paint(focus) {
+      lines.forEach(function (l) {
+        var on = show[l.t] && (focus === undefined || focus === null || l.a === focus || l.b === focus);
+        l.ln.style.display = on ? "" : "none";
+        l.ln.classList.toggle("hot", focus !== undefined && focus !== null && on);
+      });
+      Object.keys(circles).forEach(function (i) {
+        circles[i].classList.toggle("sel", +i === focus);
+      });
+    }
+    root.querySelectorAll(".fm-toggles .chip").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var t = b.getAttribute("data-type"); show[t] = !show[t]; b.classList.toggle("on", show[t]); paint(current);
+      });
+    });
+    document.getElementById("fmLegend").innerHTML = data.comms.map(function (c, i) {
+      return '<span><i style="background:' + COMM_COL[i] + '"></i>' + esc(c.name) + "'s community (" + c.size + ")</span>";
+    }).join("");
+
+    /* ---------------- receipts ---------------- */
+    var input = document.getElementById("fmInput"), card = document.getElementById("fmCard");
+    var dl = document.getElementById("fmList");
+    C.map(function (c) { return c.n; }).sort().forEach(function (n) {
+      var o = document.createElement("option"); o.value = n; dl.appendChild(o);
+    });
+    function highlight(sent, spans, words) {
+      var parts = [], last = 0;
+      spans.slice().sort(function (a, b) { return a[0] - b[0]; }).forEach(function (sp) {
+        if (sp[0] < last) return;
+        parts.push([sent.slice(last, sp[0]), false]); parts.push([sent.slice(sp[0], sp[1]), true]); last = sp[1];
+      });
+      parts.push([sent.slice(last), false]);
+      var re = words.length ? new RegExp("\\b(" + words.map(function (w) { return w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("|") + ")\\b", "gi") : null;
+      return parts.map(function (p) {
+        if (p[1]) return "<b>" + esc(p[0]) + "</b>";
+        var s = esc(p[0]);
+        return re ? s.replace(re, "<mark>$1</mark>") : s;
+      }).join("");
+    }
+    var current = null, tab = "foe";
+    function pick(i) {
+      if (i === "random") {
+        var pool = C.map(function (c, j) { return j; }).filter(function (j) { return out[j].concat(inn[j]).some(function (k) { return TYPED[E[k][2]]; }); });
+        i = pool[Math.floor(Math.random() * pool.length)];
+      }
+      current = i; input.value = C[i].n; paint(i); render();
+      try { var q = new URLSearchParams(location.search); q.set("c", C[i].n); history.replaceState(null, "", "?" + q.toString()); } catch (e) {}
+    }
+    function render() {
+      var i = current, rows = { foe: [], ally: [], family: [] };
+      out[i].forEach(function (j) { if (TYPED[E[j][2]]) rows[E[j][2]].push({ j: j, other: E[j][1], dir: "out" }); });
+      inn[i].forEach(function (j) { if (TYPED[E[j][2]]) rows[E[j][2]].push({ j: j, other: E[j][0], dir: "in" }); });
+      if (!rows[tab].length) tab = ["foe", "ally", "family"].filter(function (t) { return rows[t].length; })[0] || "foe";
+      var head = '<div class="fm-head"><a href="' + esc(C[i].u) + '" target="_blank" rel="noopener">' + esc(C[i].n) + "</a>" +
+        (C[i].c >= 0 ? '<span class="muted">' + esc(data.comms[C[i].c].name) + "'s community</span>" : "") + "</div>";
+      var tabs = '<div class="fm-tabs">' + ["foe", "ally", "family"].map(function (t) {
+        return '<button type="button" class="fm-tab ' + t + (t === tab ? " on" : "") + '" data-t="' + t + '">' +
+          { foe: "foes", ally: "allies", family: "family" }[t] + " <b>" + rows[t].length + "</b></button>";
+      }).join("") + "</div>";
+      var list = rows[tab].length ? rows[tab].map(function (r) {
+        var e = E[r.j], o = C[r.other];
+        var who = r.dir === "out" ? esc(C[i].n) + "'s page on <strong>" + esc(o.n) + "</strong>" : "<strong>" + esc(o.n) + "</strong>'s page on " + esc(C[i].n);
+        return '<div class="rc ' + tab + '"><div class="rc-who">' + who + '</div><p>' + highlight(e[3], e[4], e[5]) + "</p></div>";
+      }).join("") : '<p class="muted">No ' + tab + " links found.</p>";
+      card.innerHTML = head + tabs + '<p class="rc-note muted">Both directions: what ' + esc(C[i].n) +
+        "'s page says about others, and what their pages say about " + esc(C[i].n) + ".</p>" +
+        '<div class="rc-list">' + list + "</div>";
+      card.querySelectorAll(".fm-tab").forEach(function (b) {
+        b.addEventListener("click", function () { tab = b.getAttribute("data-t"); render(); });
+      });
+    }
+    input.addEventListener("change", function () {
+      var i = byName[input.value.trim().toLowerCase()];
+      if (i !== undefined) pick(i);
+    });
+    root.querySelectorAll(".fm-side .chip[data-pick]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var p = b.getAttribute("data-pick"); pick(p === "random" ? "random" : byName[p.toLowerCase()]);
+      });
+    });
+    var qc = new URLSearchParams(location.search).get("c");
+    pick(qc && byName[qc.toLowerCase()] !== undefined ? byName[qc.toLowerCase()] : byName["hulk"]);
+
+    /* ---------------- community-crossing bars ---------------- */
+    var lab = { foe: "Foe links", ally: "Ally links", family: "Family links" };
+    var mx = 0.6;
+    document.getElementById("cxBars").innerHTML = ["foe", "ally", "family"].map(function (t) {
+      var o = S.cross[t], m = S.null[t], sd = S.nullSd[t];
+      return '<div class="cx-row"><div class="cx-lab">' + lab[t] + ' <span class="muted">(' + S.nTyped[t] + ")</span></div>" +
+        '<div class="cx-track"><span class="cx-fill" style="width:' + (100 * o / mx) + "%;background:" + TYPE_COL[t] + '"></span>' +
+        '<span class="cx-null" style="left:' + (100 * (m - 2 * sd) / mx) + "%;width:" + (100 * 4 * sd / mx) + '%"></span>' +
+        '<span class="cx-mean" style="left:' + (100 * m / mx) + '%"></span></div>' +
+        '<div class="cx-num"><b>' + Math.round(100 * o) + "%</b> cross</div></div>";
+    }).join("") + '<p class="cx-note muted">Bar: observed share of links that join two different communities. Grey band: ±2 standard ' +
+      "deviations of 5,000 label shuffles (line: their mean, " + Math.round(100 * S.null.foe) + "%).</p>";
+
+    /* ---------------- the Hulk board ---------------- */
+    var hb = data.hostile, top = hb.slice(0, 7), bottom = hb.slice(-4);
+    function hrow(r) {
+      var n = r[1] + r[2];
+      return '<div class="hb-row"><span class="hb-n">' + esc(r[0]) + '</span><span class="hb-bar">' +
+        '<span class="f" style="flex:' + r[1] + '">' + (r[1] ? r[1] : "") + "</span>" +
+        '<span class="a" style="flex:' + r[2] + '">' + (r[2] ? r[2] : "") + "</span></span>" +
+        '<span class="hb-p">' + Math.round(100 * r[1] / n) + "% foe</span></div>";
+    }
+    document.getElementById("hbBoard").innerHTML = '<div class="hb-h">most fought-with</div>' + top.map(hrow).join("") +
+      '<div class="hb-h">…and the friendliest</div>' + bottom.map(hrow).join("") +
+      '<div class="hb-key"><span><i class="sw foe"></i>named as a foe</span><span><i class="sw ally"></i>named as an ally</span></div>';
+
+    /* ---------------- validation table ---------------- */
+    var V = data.validation;
+    function cell(v) { return v ? v[0] + " / " + v[1] + ' <span class="muted">(' + Math.round(100 * v[0] / v[1]) + "%)</span>" : "–"; }
+    document.getElementById("valTable").innerHTML = '<table><thead><tr><th></th><th class="num">foe</th><th class="num">ally</th>' +
+      '<th class="num">family</th><th class="num">all</th></tr></thead><tbody>' +
+      [["Round 1: first word list", V.round1], ["Round 2: fixed rules, fresh links", V.round2]].map(function (r) {
+        return "<tr><td>" + r[0] + '</td><td class="num">' + cell(r[1].by.foe) + '</td><td class="num">' + cell(r[1].by.ally) +
+          '</td><td class="num">' + cell(r[1].by.family) + '</td><td class="num"><b>' + cell([r[1].ok, r[1].n]) + "</b></td></tr>";
+      }).join("") + "</tbody></table>";
+
+    /* ---------------- frenemies ---------------- */
+    var REAL = { "Cyclops|Storm": "real: Storm beats Cyclops in a duel for leadership of the X-Men",
+                 "Black Widow|Yelena Belova": "real: two Black Widows from the same Red Room" };
+    document.getElementById("frList").innerHTML = data.frenemies.map(function (p) {
+      var a = p[0], b = p[1], key = [C[a].n, C[b].n].sort().join("|"), verdict = REAL[key];
+      var s = [[a, b], [b, a]].map(function (d) {
+        var j = out[d[0]].filter(function (k) { return E[k][1] === d[1]; })[0];
+        var e = E[j];
+        return '<div class="rc ' + e[2] + '"><div class="rc-who">' + esc(C[d[0]].n) + "'s page on <strong>" + esc(C[d[1]].n) +
+          "</strong> · labelled " + e[2] + "</div><p>" + highlight(e[3], e[4], e[5]) + "</p></div>";
+      }).join("");
+      return '<div class="fr ' + (verdict ? "real" : "fake") + '"><div class="fr-h"><b>' + esc(C[a].n) + " &amp; " + esc(C[b].n) +
+        '</b><span class="fr-v">' + (verdict ? "✓ " + esc(verdict) : "✗ artefact") + "</span></div>" + s + "</div>";
+    }).join("");
+  }).catch(function (err) {
+    var c = document.getElementById("fmCard");
+    if (c) c.innerHTML = '<p class="muted">Could not load week5.json (' + err + ").</p>";
+  });
+})();
