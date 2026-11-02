@@ -1254,3 +1254,111 @@
     if (c) c.innerHTML = '<p class="muted">Could not load week5.json (' + err + ").</p>";
   });
 })();
+
+/* ============================================================
+   Week 6 — separated at birth: the pass ladder, the twin finder,
+   the long-lost twins  (own IIFE, no D3)
+   ============================================================ */
+(function () {
+  "use strict";
+  var root = document.getElementById("w6");
+  if (!root) return;
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+  function pct(x) { return Math.round(100 * x) + "%"; }
+  function hopTxt(h) { return h === null ? "not connected" : h === 1 ? "linked" : h + " hops"; }
+  function hopCls(h) { return h === null || h >= 3 ? "far" : h === 1 ? "near" : "mid"; }
+  var PASS = { kept: "1 · names kept", names: "2 · names erased", story: "3 · names + pronouns erased" };
+
+  fetch(root.getAttribute("data-src")).then(function (r) { return r.json(); }).then(function (data) {
+    var C = data.chars, T = data.twins, S = data.summary;
+    var byName = {};
+    C.forEach(function (c, i) { byName[c.n.toLowerCase()] = i; });
+
+    /* ---------------- the ladder ---------------- */
+    var R = S.random;
+    document.getElementById("ladder").innerHTML = ["kept", "names", "story"].map(function (k) {
+      var s = S[k], sh = s.share;
+      var seg = [["n", sh.n, "names"], ["p", sh.p, "pronouns"], ["s", sh.s, "story"]].filter(function (x) { return x[1] >= 0.005; }).map(function (x) {
+        return '<span class="lseg ' + x[0] + '" style="flex:' + x[1] + '" title="' + x[2] + " " + pct(x[1]) + '">' +
+          (x[1] >= 0.07 ? x[2] + " " + pct(x[1]) : "") + "</span>";
+      }).join("");
+      return '<div class="lrow"><div class="llab">' + PASS[k] + '</div><div class="lbar">' + seg + "</div>" +
+        '<div class="lnum"><b>' + pct(s.linked) + '</b><span>twins directly linked</span></div>' +
+        '<div class="lnum"><b>' + pct(s.femTwin) + '</b><span>women\'s twin is a woman</span></div></div>';
+    }).join("") + '<div class="lrow lrand"><div class="llab">random pair</div><div class="lbar empty">—</div>' +
+      '<div class="lnum"><b>' + pct(R.linked) + '</b><span>linked</span></div>' +
+      '<div class="lnum"><b>' + pct(R.femTwin) + '</b><span>a woman</span></div></div>';
+
+    /* ---------------- the twin finder ---------------- */
+    var input = document.getElementById("tfInput"), card = document.getElementById("tfCard");
+    var dl = document.getElementById("tfList");
+    C.map(function (c) { return c.n; }).sort().forEach(function (n) {
+      var o = document.createElement("option"); o.value = n; dl.appendChild(o);
+    });
+    var cur = byName["storm"], pass = "kept";
+    function words(ws) {
+      return ws.map(function (w) {
+        var size = 0.72 + Math.min(0.9, Math.sqrt(w[1]) * 1.1);
+        return '<span class="tw wk-' + w[2] + '" style="font-size:' + size.toFixed(2) + 'rem" title="' + pct(w[1]) +
+          ' of the match">' + esc(w[0]) + "</span>";
+      }).join(" ");
+    }
+    function render() {
+      var c = C[cur], rows = T[pass][cur];
+      var mx = rows[0][1] || 1;
+      card.innerHTML = '<div class="fm-head"><a href="' + esc(c.u) + '" target="_blank" rel="noopener">' + esc(c.n) + "</a>" +
+        '<span class="muted">' + PASS[pass] + "</span></div>" +
+        rows.map(function (r, k) {
+          var o = C[r[0]];
+          return '<div class="twin"><span class="tr-k">' + (k + 1) + '</span><div class="tr-main">' +
+            '<div class="tr-top"><button type="button" class="tr-n" data-j="' + r[0] + '">' + esc(o.n) + "</button>" +
+            '<span class="hop ' + hopCls(r[2]) + '">' + hopTxt(r[2]) + "</span></div>" +
+            '<div class="tr-bar"><span style="width:' + (100 * r[1] / Math.max(mx, 0.5)) + '%"></span><em>cos ' + r[1].toFixed(2) + "</em></div>" +
+            '<div class="tr-w">' + words(r[3]) + "</div></div></div>";
+        }).join("");
+      card.querySelectorAll(".tr-n").forEach(function (b) {
+        b.addEventListener("click", function () { pick(+b.getAttribute("data-j")); });
+      });
+      root.querySelectorAll(".tf-pass .chip").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-pass") === pass); });
+      try { var q = new URLSearchParams(location.search); q.set("c", c.n); q.set("pass", pass); history.replaceState(null, "", "?" + q.toString()); } catch (e) {}
+    }
+    function pick(i) {
+      if (i === "random") i = Math.floor(Math.random() * C.length);
+      if (i === undefined) return;
+      cur = i; input.value = C[i].n; render();
+    }
+    input.addEventListener("change", function () { pick(byName[input.value.trim().toLowerCase()]); });
+    root.querySelectorAll(".tf-wrap .chip[data-pick]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var p = b.getAttribute("data-pick"); pick(p === "random" ? "random" : byName[p.toLowerCase()]);
+      });
+    });
+    root.querySelectorAll(".tf-pass .chip").forEach(function (b) {
+      b.addEventListener("click", function () { pass = b.getAttribute("data-pass"); render(); });
+    });
+    var qs = new URLSearchParams(location.search);
+    if (qs.get("pass") && T[qs.get("pass")]) pass = qs.get("pass");
+    var qc = qs.get("c");
+    pick(qc && byName[qc.toLowerCase()] !== undefined ? byName[qc.toLowerCase()] : byName["storm"]);
+
+    /* ---------------- the hall of long-lost twins ---------------- */
+    var STAMP = { real: "✓ real twins", meta: "≈ paperwork twins", fake: "✗ fake twins" };
+    document.getElementById("hall").innerHTML = data.hall.map(function (h) {
+      var a = C[h.a], b = C[h.b];
+      return '<div class="lt ' + h.verdict + '"><div class="lt-h"><b>' + esc(a.n) + " &amp; " + esc(b.n) + '</b><span class="lt-v">' +
+        STAMP[h.verdict] + '</span></div><div class="lt-meta">cos ' + h.cos.toFixed(2) + " · " + hopTxt(h.hops) +
+        " · #" + h.rank + " of " + data.stats.farPairs.toLocaleString("en-US") + " far pairs</div>" +
+        '<div class="lt-w">' + h.words.slice(0, 4).map(function (w) { return '<span class="tw wk-s">' + esc(w) + "</span>"; }).join(" ") + "</div>" +
+        '<p class="lt-q"><span>' + esc(a.n) + ":</span> " + esc(h.qa) + "</p>" +
+        '<p class="lt-q"><span>' + esc(b.n) + ":</span> " + esc(h.qb) + "</p>" +
+        '<p class="lt-note">' + esc(h.note) + "</p></div>";
+    }).join("");
+  }).catch(function (err) {
+    var c = document.getElementById("tfCard");
+    if (c) c.innerHTML = '<p class="muted">Could not load week6.json (' + err + ").</p>";
+  });
+})();

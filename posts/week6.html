@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 6 — Separated at birth?</title>
+<meta name="description" content="Week 6 of DTU 02805: we erased every name from 303 Marvel pages and asked which characters still read alike, and whether the network knows about it.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="bolt">⚡</span>Marvel Social Graphs</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="week1.html">Week&nbsp;1</a>
+      <a href="week2.html">Week&nbsp;2</a>
+      <a href="week3.html">Week&nbsp;3</a>
+      <a href="week4.html">Week&nbsp;4</a>
+      <a href="week5.html">Week&nbsp;5</a>
+      <a href="week6.html" class="active">Week&nbsp;6</a>
+      <a href="https://sunelehmann.com/socialgraphs2026-web/" target="_blank" rel="noopener">Course</a>
+      <button id="themeToggle" type="button">☾</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="w6" data-src="../assets/week6.json">
+
+  <section class="hero reveal">
+    <span class="kicker">Week 6 · when is language "close"?</span>
+    <h1>Separated<br><span class="mark">at birth?</span></h1>
+    <p class="post-meta">By <span class="tag">Ívar</span> <span class="tag">Gunnlaugur</span> <span class="tag">Víðir</span>
+    &nbsp;·&nbsp; TF-IDF says Storm's closest page is the Human Torch's. The reason: he's <em>Johnny Storm</em>. So we asked
+    the question we actually wanted answered: <strong>if you erase every name, which Marvel characters still read like twins,
+    and are they twins the network never introduced?</strong></p>
+  </section>
+
+  <section class="reveal">
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="89">0</div><div class="label">% of a typical "twin" match is just names</div></div>
+      <div class="stat"><div class="num" data-count="85">0</div><div class="label">% of women's pages get a woman twin once names go</div></div>
+      <div class="stat"><div class="num" data-count="7">0</div><div class="label">long-lost twins we read by hand</div></div>
+      <div class="stat"><div class="num" data-count="4">0</div><div class="label">of them turned out real</div></div>
+    </div>
+  </section>
+
+  <!-- ================= METHOD ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Three ways to read a page</span></h2>
+    <p class="reveal">Every one of the 303 pages becomes a TF-IDF vector, using the course's definitions (tf = count / page length,
+    idf = ln(303 / pages using the word)). A page's <strong>twin</strong> is the page with the highest cosine similarity to it.
+    We did it three times, each time erasing one more thing that we suspected was doing the matching:</p>
+    <div class="pass-cards reveal">
+      <div class="pass-card"><b>1 · Names kept</b><span>The raw page, every word in.</span></div>
+      <div class="pass-card"><b>2 · Names erased</b><span>Any word capitalised in more than half its uses is a name and goes
+      (9,026 words: <em>Storm</em>, <em>Parker</em>, <em>Wakanda</em>…). This is the course's week-6 filter.</span></div>
+      <div class="pass-card"><b>3 · Names + pronouns erased</b><span>Pass 2, and <em>she, her, he, him, his</em> go too.
+      We added this after pass 2 surprised us (see below).</span></div>
+    </div>
+    <p class="reveal">For every twin we also kept <em>why</em> they match: each word's share of the cosine, coloured
+    <span class="wk-n">name</span>, <span class="wk-p">pronoun</span> or <span class="wk-s">story</span>. And we kept how far apart
+    the pair is in the week-1 link network.</p>
+  </section>
+
+  <!-- ================= LADDER ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">What makes two pages twins?</span></h2>
+    <p class="reveal">Each row looks at all 303 pages and their #1 twin. The bar shows what the match is made of on average.
+    The two numbers on the right are what the twins have in common outside the text.</p>
+    <div class="ladder reveal" id="ladder"></div>
+    <p class="reveal"><strong>With names kept, twins are mostly just name-sharers.</strong> 89% of the average match is names,
+    and 73% of twins are directly linked: of course, since a page that links to you mentions your name. Erase the names and
+    something unexpected takes over. <strong>85% of the 65 pages that mostly say <em>she</em> now get a twin who is also a woman</strong>,
+    against 21% if twins were random. The words doing it are <span class="wk-p">her</span> and <span class="wk-p">she</span>.
+    Most Marvel heroes are men, so a page full of <em>her</em> is a rare and very "distinctive" page, and TF-IDF rewards rare.
+    Erase the pronouns too, and women's twins drop to 58%. That is still well above 21%. Some of the rest is real shared story:
+    several of these women are X-Men telepaths, so <span class="wk-s">mutants</span> and <span class="wk-s">telekinetic</span>
+    do the matching. Some is gendered vocabulary that isn't a pronoun, like <span class="wk-s">female</span>.</p>
+  </section>
+
+  <!-- ================= FINDER ================= -->
+  <h2 class="reveal"><span class="mark">The twin finder</span></h2>
+  <p class="reveal narrow">Pick a character and a pass. You get the five closest pages, how close they are, how many links apart
+  they are in the network, and the words behind each match. Try <strong>Storm</strong> in all three passes. Try
+  <strong>Venom</strong>, whose twins stay the same whatever you erase. That's what a story-driven match looks like.</p>
+
+  <div class="tf-wrap reveal">
+    <div class="sc-controls">
+      <label>character <input id="tfInput" type="text" list="tfList" placeholder="type a name…" autocomplete="off"></label>
+      <datalist id="tfList"></datalist>
+      <button class="chip" data-pick="Storm" type="button">Storm</button>
+      <button class="chip" data-pick="Spider-Man" type="button">Spider-Man</button>
+      <button class="chip" data-pick="Venom" type="button">Venom</button>
+      <button class="chip" data-pick="Garrison Kane" type="button">Garrison Kane</button>
+      <button class="chip" data-pick="random" type="button">🎲</button>
+    </div>
+    <div class="sc-controls tf-pass">
+      <button class="chip" data-pass="kept" type="button">1 · names kept</button>
+      <button class="chip" data-pass="names" type="button">2 · names erased</button>
+      <button class="chip" data-pass="story" type="button">3 · names + pronouns erased</button>
+    </div>
+    <div id="tfCard" class="tf-card"><p class="muted">Loading…</p></div>
+    <div class="tf-key muted"><span class="wk-n">name</span> <span class="wk-p">pronoun</span> <span class="wk-s">story word</span>
+    · word size = its share of the match · hops = shortest path in the undirected link network</div>
+  </div>
+
+  <!-- ================= HALL ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Long-lost twins (we read them)</span></h2>
+    <p class="reveal">Now the question we came for. In pass 3 (no names, no pronouns), which pairs read most alike while sitting
+    <strong>3 or more links apart, or not connected at all</strong>? Random pairs are that far apart 66% of the time, so being far
+    is normal. Being far <em>and</em> textually close is the interesting part. We took the strongest far pairs and opened both pages
+    every time:</p>
+  </section>
+  <div class="hall reveal" id="hall"></div>
+  <p class="reveal narrow"><strong>Four of the seven are real.</strong> The text found something the links never recorded:
+  two characters with replacement arms, two coming-out stories, two flyers on artificial wings, two vampire stories.
+  One more is real but about the paperwork. The two fakes come from exactly the trap this week warns about. A name the filter
+  missed (<em>brain</em>) and a word our tokenizer cut out of <em>techno-organic</em> are each enough to fake a twin.
+  The cosine was no lower for the fakes: Bird-Brain &amp; Brain Drain is the <em>strongest</em> far pair of all.</p>
+
+  <!-- ================= SURPRISED ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">What surprised us</span></h2>
+    <blockquote class="reveal">
+      <strong>We erased the names to get at the story, and found gender instead.</strong> We expected that without names, the
+      twins would be about powers and plots. Instead, the biggest single signal in pass 2 was the pronoun. In this corpus, being
+      a woman is rare enough to be a page's most "distinctive" feature. That says less about TF-IDF than about who Marvel's
+      superheroes are: 65 of 303 pages mostly use <em>she</em>.
+    </blockquote>
+    <p class="reveal"><strong>What we checked.</strong> We read every pair in the hall in both pages' raw text (the quotes on the cards
+    are pulled straight from the pages). We also read the Storm → Human Torch match, where 87% of the cosine is the word
+    <em>storm</em>, and the pronoun claim: across all 303 pages, <em>her</em> and <em>she</em> carry 10% of the average pass-2 match,
+    and much more for women's pages.</p>
+    <p class="reveal"><strong>Limitation.</strong> Two of them, really. "Woman" here means "the page mostly says <em>she</em>". That's a
+    shortcut that misses mixed pages (legacy names, teams), and nobody's gender is defined by a pronoun count on Wikipedia. And
+    TF-IDF can't tell a theme from a coincidence: one rare word (<em>techno</em>, <em>brain</em>) can outweigh a whole page. A high
+    cosine is a reason to open both pages, not a finding.</p>
+  </section>
+
+  <hr>
+  <p class="reveal muted">Data: the frozen week-1 Marvel network and the week-5 page texts (<code>marvel_pages.zip</code>). TF-IDF with
+  the course's definitions; names = words capitalised in more than half their uses. Network distance: shortest path on the undirected
+  week-1 graph. Reproduce with <code>cd analysis &amp;&amp; python3 week6_post.py</code> (writes <code>assets/week6.json</code>, ~10 s).</p>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    Built with an LLM for DTU 02805 · data © Wikipedia contributors (CC BY-SA) ·
+    <a href="https://sunelehmann.com/socialgraphs2026-web/weeks/week6.html" target="_blank" rel="noopener">week 6 brief</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js" defer></script>
+</body>
+</html>
