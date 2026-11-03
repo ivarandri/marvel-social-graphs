@@ -16,6 +16,7 @@ posts/week3.html           week 3: Wikipedia game to Spider-Man, break-the-unive
 posts/week4.html           week 4 (philosophers): Louvain sorting hat, backbone threads, Aristotle's link communities
 posts/week5.html           week 5: links typed as foe / ally / family from their sentences, feud map + receipts, hand-checked labels
 posts/week6.html           week 6: TF-IDF twins with names kept / erased / names+pronouns erased, twin finder, long-lost twins read by hand
+posts/week7.html           week 7: who gets named on each hero's own page, shadow detector audited by hand, spotlight meter with receipts
 assets/style.css           shared styles
 assets/app.js              shared page interactions + the interactive network (week 1) and
                             friendship-paradox explorer + summary widgets (week 2) and
@@ -30,7 +31,8 @@ assets/week3.json          adjacency lists, attack curves and summary numbers fo
 assets/week4.json          20 Louvain votes per philosopher, backbone links + layout, threads, Aristotle's rooms
 assets/week5.json          every link's sentence + label, layout, community-crossing test, validation counts
 assets/week6.json          five textual twins per page in three passes (cosine, network hops, the words behind it), the long-lost twins
-data/                      the frozen course snapshots: Marvel network (week1_*.tsv), Marvel page texts (marvel_pages.zip, week 5)
+assets/week7.json          per page: subject vs other character mention counts, shadow ratio, audit verdict, receipt sentences
+data/                      the frozen course snapshots: Marvel network (week1_*.tsv), Marvel page texts (marvel_pages.zip, week 5), raw spaCy entity spans (week7_ner_mentions.csv.gz, week 7)
                             and philosophers (week4_philosophers_*.tsv)
 analysis/week1.py          regenerates every figure/stat in the week-1 post
 analysis/week2_post.py     regenerates assets/week2.json for the week-2 post
@@ -38,6 +40,7 @@ analysis/week3_post.py     regenerates assets/week3.json for the week-3 post (~2
 analysis/week4_post.py     regenerates assets/week4.json for the week-4 post (~2 min)
 analysis/week5_post.py     regenerates assets/week5.json for the week-5 post (~20 s)
 analysis/week6_post.py     regenerates assets/week6.json for the week-6 post (~10 s)
+analysis/week7_post.py     regenerates assets/week7.json for the week-7 post (~25 s; reads data/week7_ner_mentions.csv.gz)
 analysis/validation_round*.tsv  the 2 x 60 week-5 labels we read by hand (label vs truth)
 ```
 
@@ -52,6 +55,7 @@ python3 week3_post.py      # writes ../assets/week3.json (reads ../../week3_debu
 python3 week4_post.py      # writes ../assets/week4.json (needs scikit-learn for NMI)
 python3 week5_post.py      # writes ../assets/week5.json
 python3 week6_post.py      # writes ../assets/week6.json
+python3 week7_post.py      # writes ../assets/week7.json
 ```
 
 ## Publishing (GitHub Pages)
@@ -72,4 +76,4 @@ python3 week6_post.py      # writes ../assets/week6.json
 ## Group
 
 Ívar, Gunnlaugur, Víðir — named on the home page (`index.html`) and in the byline of each
-post (`posts/week1.html` … `posts/week6.html`).
+post (`posts/week1.html` … `posts/week7.html`).

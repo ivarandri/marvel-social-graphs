@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 7 — Whose page is it anyway?</title>
+<meta name="description" content="Week 7 of DTU 02805: we counted who gets named on each of the 303 Marvel hero pages to find the heroes living in someone else's shadow, then read 44 pages to see how often our counter was lying.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><span class="bolt">⚡</span>Marvel Social Graphs</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="week1.html">Week&nbsp;1</a>
+      <a href="week2.html">Week&nbsp;2</a>
+      <a href="week3.html">Week&nbsp;3</a>
+      <a href="week4.html">Week&nbsp;4</a>
+      <a href="week5.html">Week&nbsp;5</a>
+      <a href="week6.html">Week&nbsp;6</a>
+      <a href="week7.html" class="active">Week&nbsp;7</a>
+      <a href="https://sunelehmann.com/socialgraphs2026-web/" target="_blank" rel="noopener">Course</a>
+      <button id="themeToggle" type="button">☾</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="w7" data-src="../assets/week7.json">
+
+  <section class="hero reveal">
+    <span class="kicker">Week 7 · named entities, counted and checked</span>
+    <h1>Whose page<br><span class="mark">is it anyway?</span></h1>
+    <p class="post-meta">By <span class="tag">Ívar</span> <span class="tag">Gunnlaugur</span> <span class="tag">Víðir</span>
+    &nbsp;·&nbsp; The Wikipedia page of <em>Bob, Agent of Hydra</em> names <strong>Deadpool 22 times</strong> and <strong>Bob 18 times</strong>.
+    So we asked of all 303 hero pages: <strong>who gets named the most on your own page, and which heroes live in someone
+    else's shadow?</strong> Then we had to read 44 pages to find out how often our shadow detector was lying.</p>
+  </section>
+
+  <section class="reveal">
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="44">0</div><div class="label">pages our detector flagged as "stolen"</div></div>
+      <div class="stat"><div class="num" data-count="32">0</div><div class="label">of them false alarms, once we read them</div></div>
+      <div class="stat"><div class="num" data-count="11">0</div><div class="label">heroes really living in a shadow</div></div>
+      <div class="stat"><div class="num" data-count="801">0</div><div class="label">"characters" that were really comic titles</div></div>
+    </div>
+  </section>
+
+  <!-- ================= METHOD ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">The shadow detector</span></h2>
+    <div class="w7-steps reveal">
+      <div class="pass-card"><b>1 · Tag</b><span>spaCy's small English model marks every name in every paragraph. We keep its raw output
+      untouched, because it misses about half the character names (we measured that in exercise 7.8).</span></div>
+      <div class="pass-card"><b>2 · Resolve</b><span>Merge names we can justify (<em>Peter Parker</em> → Spider-Man), rescue codenames
+      the tagger called places (<em>Venom</em> as a place, 537 times), and drop creators and comic titles.</span></div>
+      <div class="pass-card"><b>3 · Count the hero</b><span>The page's own subject is counted by its names in the raw text: title,
+      civil name, first and last name. This doesn't depend on the tagger.</span></div>
+      <div class="pass-card"><b>4 · Shadow</b><span>Shadow = mentions of the most-named <em>other</em> character ÷ mentions of the
+      subject. At <b class="inline">0.5</b> or more, you're in someone's shadow. At 1 or more, you're eclipsed.</span></div>
+    </div>
+    <p class="reveal">Most pages are comfortably about their own hero: the median shadow is 0.15, so the runner-up gets about one
+    mention for every seven of the subject. But 44 pages crossed the line on the first run. A computer would stop there.
+    We opened every one of them.</p>
+  </section>
+
+  <!-- ================= AUDIT ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">44 suspects, 11 real shadows</span></h2>
+    <p class="reveal">Each bar segment is one reason a "stolen" page turned out fine, applied as one fix after another. Click a
+    segment to see its pages, with the shadow before and after the fix.</p>
+    <div class="audit reveal" id="audit"></div>
+    <div class="audit-list reveal" id="auditList"></div>
+    <p class="reveal"><strong>Three out of four alarms were the instrument's fault, not the story's.</strong> The most common one was a
+    hero "stealing" their own page under another name. Mania is <em>"also known as Venom"</em>, Jericho Drumm <em>is</em> Brother Voodoo,
+    and Black Cat is Felicia Hardy. Almost as common: pages about a <em>codename</em> that several characters share, where the
+    "thief" is simply another holder. Nomad's page is mostly about Steve Rogers because Rogers <em>was</em> the first Nomad. Ricochet is
+    an identity Spider-Man once wore.</p>
+  </section>
+
+  <!-- ================= ECLIPSE ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">Living in someone's shadow</span></h2>
+    <p class="reveal">The 11 pages that stay in a shadow after every fix. The <span class="w7k w7k-s">gold</span> bar is how often the
+    page names its own hero, and the <span class="w7k w7k-c">ink</span> bar how often it names the shadow. Click a name to open the
+    receipts below.</p>
+    <div class="eclipse reveal" id="eclipse"></div>
+    <p class="reveal"><strong>The biggest shadow casters are Deadpool (3 pages), Iron Man (2) and Captain America.</strong> And here's
+    the twist for a network course: <strong>Iron Man and Captain America don't have pages in our 303-page network at all.</strong>
+    The category we crawled in week 1 doesn't contain them. So the link network can't see the two characters these pages are
+    written around. Only the text can.</p>
+  </section>
+
+  <!-- ================= EXPLORER ================= -->
+  <h2 class="reveal"><span class="mark">The spotlight meter</span></h2>
+  <p class="reveal narrow">Pick any of the 303 pages. You get everyone it names (the subject in gold), the verdict, and the actual
+  sentences behind the biggest rival, so you can check the count yourself. Try <strong>Bob</strong>. Try <strong>Mania</strong> for
+  a false alarm. Try <strong>Storm</strong> for a hero who owns her page.</p>
+  <div class="tf-wrap reveal">
+    <div class="sc-controls">
+      <label>page <input id="spInput" type="text" list="spList" placeholder="type a name…" autocomplete="off"></label>
+      <datalist id="spList"></datalist>
+      <button class="chip" data-pick="Bob, Agent of Hydra" type="button">Bob</button>
+      <button class="chip" data-pick="War Machine" type="button">War Machine</button>
+      <button class="chip" data-pick="Bucky" type="button">Bucky</button>
+      <button class="chip" data-pick="Quicksilver" type="button">Quicksilver</button>
+      <button class="chip" data-pick="Mania" type="button">Mania</button>
+      <button class="chip" data-pick="Storm" type="button">Storm</button>
+      <button class="chip" data-pick="random" type="button">🎲</button>
+    </div>
+    <div id="spCard" class="sp-card"><p class="muted">Loading…</p></div>
+  </div>
+
+  <!-- ================= SURPRISED ================= -->
+  <section class="narrow">
+    <h2 class="reveal"><span class="mark">What surprised us</span></h2>
+    <blockquote class="reveal">
+      <strong>We expected women's pages to be written through the men around them. They weren't.</strong> Only 1 of the 11 shadowed
+      pages belongs to a woman (Anne Weying, in Venom's shadow): 9%, while women make up 21% of the pages. And the typical shadow
+      on a woman's page (0.15) is the same as on a man's (0.14). The shadows we found are about <em>sidekicks</em> and <em>spin-offs</em>
+      (Bob, Dogpool, Agent X around Deadpool; War Machine and Guardsman around Iron Man), not about gender. With 11 cases that's a
+      weak "no", not a strong one.
+    </blockquote>
+    <p class="reveal"><strong>What we checked.</strong> We read the lead of all 44 flagged pages and wrote down every fix, with the
+    sentence that justifies it, in <code>analysis/week7_post.py</code>: extra names for 24 pages and holder lists for 22 shared
+    codenames. The 11 real
+    shadows were read in full. Their receipts are the sentences in the spotlight meter. That reading changed a result: our
+    first run had <strong>War Machine eclipsed</strong> by Iron Man (1.24), until we noticed "James Rhodes" in the rival list. Rhodey
+    <em>is</em> War Machine. Counted as himself, he's at 0.54: still in Iron Man's shadow, but no longer eclipsed. We also sampled 25 of the 801 mentions the
+    title rule threw away. 23 really were titles (<em>Iron Man #43</em>, <em>Venom: Let There Be Carnage</em>). Two were list entries
+    that do name the character (<em>"Jean Grey: The most powerful…"</em>).</p>
+    <p class="reveal"><strong>Limitation.</strong> The two sides of the ratio are counted differently. The subject is counted by
+    string matching, which is generous. Everyone else comes from a tagger that finds only about half of all character names, and
+    codenames least of all. That makes our shadows <em>conservative</em>: a rival known mainly by a codename the tagger can't see
+    could hide a real shadow. And a mention count isn't importance. A sidekick's page <em>should</em> name the hero, so a shadow says
+    how the page is written, not who matters more.</p>
+  </section>
+
+  <hr>
+  <p class="reveal muted">Data: the week-1 Marvel pages (<code>marvel_pages.zip</code>) and spaCy <code>en_core_web_sm</code> 3.8 entity
+  spans, kept raw in <code>data/week7_ner_mentions.csv.gz</code>. Alias resolution as in exercise 7.8, plus the hand-written fixes in the
+  script. Reproduce with <code>cd analysis &amp;&amp; python3 week7_post.py</code> (writes <code>assets/week7.json</code>, ~25 s).</p>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    Built with an LLM for DTU 02805 · data © Wikipedia contributors (CC BY-SA) ·
+    <a href="https://sunelehmann.com/socialgraphs2026-web/weeks/week7.html" target="_blank" rel="noopener">week 7 brief</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

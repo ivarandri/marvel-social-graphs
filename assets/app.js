@@ -1362,3 +1362,129 @@
     if (c) c.innerHTML = '<p class="muted">Could not load week6.json (' + err + ").</p>";
   });
 })();
+
+/* ============================================================
+   Week 7 — whose page is it anyway? the audit bar, the eclipse
+   chart, the spotlight meter  (own IIFE, no D3)
+   ============================================================ */
+(function () {
+  "use strict";
+  var root = document.getElementById("w7");
+  if (!root) return;
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+  function reEsc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  var SEG = [
+    ["same hero, another name", "alias", "the hero under another name"],
+    ["shared codename", "mantle", "another holder of a shared codename"],
+    ["too thin to judge", "thin", "page too thin to judge"],
+    ["real shadow", "real", "real shadow"]
+  ];
+
+  fetch(root.getAttribute("data-src")).then(function (r) { return r.json(); }).then(function (data) {
+    var P = data.pages, A = data.alias || {};
+    var byName = {}, byPage = {};
+    P.forEach(function (p, i) { byName[p.n.toLowerCase()] = i; byPage[p.page] = i; });
+    var spotPick = function () {};
+
+    /* ---------------- the audit bar ---------------- */
+    var sus = P.filter(function (p) { return p.audit; });
+    var bar = SEG.map(function (s) {
+      var n = sus.filter(function (p) { return p.audit === s[0]; }).length;
+      return '<button type="button" class="aseg ' + s[1] + '" data-seg="' + s[0] + '" style="flex:' + n + '" title="' + esc(s[2]) + ": " + n + '">' +
+        "<b>" + n + "</b><span>" + esc(s[2]) + "</span></button>";
+    }).join("");
+    document.getElementById("audit").innerHTML = '<div class="abar">' + bar + "</div>";
+    function showSeg(seg) {
+      var list = sus.filter(function (p) { return p.audit === seg; }).sort(function (a, b) { return b.path[0] - a.path[0]; });
+      document.getElementById("auditList").innerHTML =
+        '<div class="al-h">' + esc(SEG.filter(function (s) { return s[0] === seg; })[0][2]) + " · " + list.length + " pages</div>" +
+        list.map(function (p) {
+          var fin = p.path[p.path.length - 1];
+          return '<button type="button" class="al-chip" data-p="' + esc(p.page) + '"><b>' + esc(p.n) + "</b>" +
+            '<span class="muted">' + (p.naive ? "rival: " + esc(p.naive) + " · " : "") + "shadow " + p.path[0].toFixed(2) + " → " + fin.toFixed(2) + "</span></button>";
+        }).join("");
+      document.querySelectorAll("#auditList .al-chip").forEach(function (b) {
+        b.addEventListener("click", function () { spotPick(byPage[b.getAttribute("data-p")], true); });
+      });
+      root.querySelectorAll(".aseg").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-seg") === seg); });
+    }
+    root.querySelectorAll(".aseg").forEach(function (b) {
+      b.addEventListener("click", function () { showSeg(b.getAttribute("data-seg")); });
+    });
+    showSeg("same hero, another name");
+
+    /* ---------------- the eclipse chart ---------------- */
+    var real = P.filter(function (p) { return p.audit === "real shadow"; }).sort(function (a, b) { return b.ratio - a.ratio; });
+    document.getElementById("eclipse").innerHTML = real.map(function (p) {
+      var mx = Math.max(p.subject, p.cn);
+      return '<div class="ec-row"><button type="button" class="ec-n" data-p="' + esc(p.page) + '">' + esc(p.n) + "</button>" +
+        '<div class="ec-bars"><div class="ec-line"><div class="ec-b s"><span style="width:' + (100 * p.subject / mx) + '%"></span></div><em>' +
+        p.subject + " · " + esc(p.n) + "</em></div>" +
+        '<div class="ec-line"><div class="ec-b c"><span style="width:' + (100 * p.cn / mx) + '%"></span></div><em>' + p.cn + " · " + esc(p.caster) +
+        (p.caster_page ? "" : ' <i class="nopage">no page in our 303</i>') + "</em></div></div>" +
+        '<div class="ec-r"><b>' + p.ratio.toFixed(2) + "</b><span>shadow</span></div>" +
+        '<p class="ec-note">' + esc(p.note) + "</p></div>";
+    }).join("");
+    document.querySelectorAll("#eclipse .ec-n").forEach(function (b) {
+      b.addEventListener("click", function () { spotPick(byPage[b.getAttribute("data-p")], true); });
+    });
+
+    /* ---------------- the spotlight meter ---------------- */
+    var input = document.getElementById("spInput"), card = document.getElementById("spCard");
+    var dl = document.getElementById("spList");
+    P.map(function (p) { return p.n; }).sort().forEach(function (n) {
+      var o = document.createElement("option"); o.value = n; dl.appendChild(o);
+    });
+    function verdict(p) {
+      if (p.audit === "real shadow") return '<span class="vd real">in ' + esc(p.caster) + "'s shadow · " + p.ratio.toFixed(2) + "</span>";
+      if (p.audit === "too thin to judge") return '<span class="vd thin">too thin to judge</span>';
+      if (p.audit) return '<span class="vd alarm">false alarm: ' + esc(p.audit) + " (" + p.path[0].toFixed(2) + " → " + p.path[p.path.length - 1].toFixed(2) + ")</span>";
+      return '<span class="vd clear">owns the page · shadow ' + p.ratio.toFixed(2) + "</span>";
+    }
+    function highlight(s, names) {
+      var out = esc(s);
+      names.sort(function (a, b) { return b.length - a.length; }).forEach(function (n) {
+        out = out.replace(new RegExp("(^|[^\\w-])(" + reEsc(esc(n)) + ")(?![\\w-])", "g"), "$1<mark>$2</mark>");
+      });
+      return out;
+    }
+    function render(i) {
+      var p = P[i];
+      var rows = [[p.n + " (this page)", p.subject, "s"]].concat(p.top.map(function (t) { return [t[0], t[1], "o"]; }));
+      var mx = Math.max.apply(null, rows.map(function (r) { return r[1]; })) || 1;
+      var names = (A[p.caster] || []).concat(p.caster ? [p.caster] : []);
+      card.innerHTML = '<div class="fm-head"><a href="' + esc(p.u) + '" target="_blank" rel="noopener">' + esc(p.n) + "</a>" + verdict(p) + "</div>" +
+        '<div class="sp-bars">' + rows.map(function (r) {
+          return '<div class="sp-row ' + r[2] + '"><span class="sp-l">' + esc(r[0]) + '</span><div class="sp-b"><span style="width:' +
+            (100 * r[1] / mx) + '%"></span></div><span class="sp-v">' + r[1] + "</span></div>";
+        }).join("") + "</div>" +
+        (p.note ? '<p class="ec-note">' + esc(p.note) + "</p>" : "") +
+        (p.receipts.length ? '<div class="sp-rc"><div class="al-h">sentences naming ' + esc(p.caster || "the rival") + "</div>" +
+          p.receipts.map(function (s) { return '<p class="lt-q">' + highlight(s, names) + "</p>"; }).join("") + "</div>" : "") +
+        '<p class="muted sp-key">gold = the page\'s own hero, counted by its names in the text · others = characters the tagger found, after alias resolution. ' +
+        'We fixed missed self-names by hand only for pages over the 0.5 line, so below it the hero\'s own civil name can still show up as a "rival" (Surge\'s Noriko Ashida, Iron Fist\'s Danny Rand).</p>';
+      try { var q = new URLSearchParams(location.search); q.set("p", p.n); history.replaceState(null, "", "?" + q.toString()); } catch (e) {}
+    }
+    spotPick = function (i, scroll) {
+      if (i === "random") i = Math.floor(Math.random() * P.length);
+      if (i === undefined) return;
+      input.value = P[i].n; render(i);
+      if (scroll) card.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    input.addEventListener("change", function () { spotPick(byName[input.value.trim().toLowerCase()]); });
+    root.querySelectorAll(".tf-wrap .chip[data-pick]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var v = b.getAttribute("data-pick"); spotPick(v === "random" ? "random" : byName[v.toLowerCase()]);
+      });
+    });
+    var qp = new URLSearchParams(location.search).get("p");
+    spotPick(qp && byName[qp.toLowerCase()] !== undefined ? byName[qp.toLowerCase()] : byName["bob, agent of hydra"]);
+  }).catch(function (err) {
+    var c = document.getElementById("spCard");
+    if (c) c.innerHTML = '<p class="muted">Could not load week7.json (' + err + ").</p>";
+  });
+})();
